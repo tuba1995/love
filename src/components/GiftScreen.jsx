@@ -753,6 +753,24 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
       return;
     }
     if (icon.action === "danger") {
+      // chưa có chìa khoá thì chẳng có gì để mất — coi như 1 icon hên xui
+      // bình thường, cho heo ăn để bấm vẫn có tác dụng, giống các trường
+      // hợp "đã có rồi" khác trong game
+      if (!keyFound) {
+        const amount = randomMoneyAmount();
+        setPiggyMoney((m) => m + amount);
+        setModal({ type: "feed", amount });
+        return;
+      }
+      // đã có chìa khoá rồi thì mới có 50% tỉ lệ dính bẫy và mất nó
+      if (Math.random() >= 0.5) {
+        setModal({
+          type: "fun-text",
+          emoji: icon.emoji,
+          text: "Hú vía, né được bẫy! 😅",
+        });
+        return;
+      }
       setKeyFound(false);
       // chìa khoá vừa bị lấy lại — nếu trước đó đã được tính là "hoàn
       // thành" (hoặc đang giữa chừng xếp hình trái tim) thì phải bỏ đi,

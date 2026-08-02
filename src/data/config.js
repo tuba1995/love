@@ -43,27 +43,13 @@ export const QUEST_COMPLETE_GIF =
 // cổng thần bí trong hộp quà — kèm theo hũ heo đang bao nhiêu tiền và mấy
 // phần quà "hên xui" đã trúng mấy lần. Để trống thì app không gửi gì cả.
 //
-// Giá trị thật KHÔNG để trực tiếp ở đây nữa — đọc từ file .env.local (đã
-// được .gitignore bỏ qua, không bao giờ bị commit lên git). Sửa/tạo file
-// .env.local ở thư mục gốc dự án với nội dung:
-//   VITE_TELEGRAM_BOT_TOKEN=token_that_cua_ban
-//   VITE_TELEGRAM_CHAT_ID=chat_id_cua_ban
-// (đã có sẵn file .env.example làm mẫu). Cách lấy 2 giá trị đó (mất
-// khoảng 1 phút):
-//   1. Mở Telegram, chat với @BotFather, gõ /newbot rồi làm theo hướng dẫn
-//      để tạo 1 bot mới — nó sẽ trả về 1 "token" dạng
-//      "123456789:ABC-DEF1234ghIkl-zyx57W2v1u123ew11".
-//   2. Nhắn bất kỳ tin nào cho bot vừa tạo (tìm bot theo username nó cho),
-//      rồi mở link sau trên trình duyệt (thay TOKEN bằng token thật):
-//      https://api.telegram.org/botTOKEN/getUpdates
-//      Trong kết quả trả về tìm "chat":{"id": ...} — con số đó là chatId.
-// Lưu ý: đây vẫn là site tĩnh (không có backend), nên giá trị này rốt
-// cuộc vẫn nằm trong file JS build ra — biến .env chỉ giúp nó không bị
-// lưu vào lịch sử git, chứ không "giấu" được khỏi người mở devtools trên
-// trang đã deploy.
+// Lưu ý: đây vẫn là site tĩnh (không có backend), nên giá trị bên dưới rốt
+// cuộc vẫn nằm trong file JS build ra — ai mở DevTools trên trang đã deploy
+// đều xem được, chứ không "giấu" được. Nếu lo bị lộ/spam thì thu hồi token
+// qua @BotFather rồi tạo bot mới.
 export const TELEGRAM = {
-  botToken: import.meta.env.VITE_TELEGRAM_BOT_TOKEN ?? "",
-  chatId: import.meta.env.VITE_TELEGRAM_CHAT_ID ?? "",
+  botToken: "8960445085:AAFGADjCvbTzoFucuCu_xShqvLxmrf0SKvk",
+  chatId: "973326869",
 };
 
 // Trang "Coming Soon" hiện ra sau khi người chơi hoàn thành hết nhiệm vụ
