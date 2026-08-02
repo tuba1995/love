@@ -23,12 +23,12 @@ const SPARKLES = [
 
 const BURST_RAYS = Array.from({ length: 12 }, (_, i) => i * 30);
 
-// Con thỏ mang chức năng "cổng thần bí" — cứ mỗi 80 giây sẽ đổi sang icon
+// Con thỏ mang chức năng "cổng thần bí" — cứ mỗi 20 giây sẽ đổi sang icon
 // tiếp theo trong danh sách này (hết vòng thì quay lại từ đầu), để người
 // chơi không thể học thuộc icon mà đoán trước.
 const GATE_EMOJI_SET = ["🐰", "🦉", "🐿️", "🦔", "🐢"];
 
-// Hộp bẫy nguy hiểm — cứ mỗi 3 phút tự đổi sang icon tiếp theo trong danh
+// Hộp bẫy nguy hiểm — cứ mỗi 20 giây tự đổi sang icon tiếp theo trong danh
 // sách này. Bấm vào là mất chìa khoá đã tìm được (về lại 0/1) và con rắn
 // giữ chìa khoá cũng đổi sang hình dạng khác luôn, xem action "danger".
 const DANGER_EMOJI_SET = ["⚠️", "💀", "🧨"];
@@ -587,23 +587,23 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
     return () => clearInterval(intervalId);
   }, [opened]);
 
-  // con thỏ cổng thần bí đổi qua GATE_EMOJI_SET mỗi 80 giây, xoay hết cả 5
+  // con thỏ cổng thần bí đổi qua GATE_EMOJI_SET mỗi 20 giây, xoay hết cả 5
   // icon thì quay lại từ đầu
   useEffect(() => {
     if (!opened) return;
     const intervalId = setInterval(() => {
       setGateIconIndex((i) => (i + 1) % GATE_EMOJI_SET.length);
-    }, 80000);
+    }, 20000);
     return () => clearInterval(intervalId);
   }, [opened]);
 
-  // hộp bẫy nguy hiểm đổi qua DANGER_EMOJI_SET mỗi 3 phút, xoay hết cả 3
+  // hộp bẫy nguy hiểm đổi qua DANGER_EMOJI_SET mỗi 20 giây, xoay hết cả 3
   // icon thì quay lại từ đầu
   useEffect(() => {
     if (!opened) return;
     const intervalId = setInterval(() => {
       setDangerIconIndex((i) => (i + 1) % DANGER_EMOJI_SET.length);
-    }, 180000);
+    }, 20000);
     return () => clearInterval(intervalId);
   }, [opened]);
 
