@@ -499,6 +499,10 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
   const [questGifError, setQuestGifError] = useState(false);
   const [musicPlaying, setMusicPlaying] = useState(false);
   const [musicPurchased, setMusicPurchased] = useState(false);
+  // true khi nhạc nền YouTube bị tạm dừng để nhường chỗ cho dialog 💖,
+  // để biết lúc đóng dialog đó có cần bật nhạc nền chạy tiếp không
+  const [resumeYoutubeAfterModal, setResumeYoutubeAfterModal] =
+    useState(false);
   const [brokenPiggyGifs, setBrokenPiggyGifs] = useState(() => new Set());
   const [collected, setCollected] = useState(() => new Set());
   const [ourDayFound, setOurDayFound] = useState(() => new Set());
@@ -670,6 +674,11 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
       return;
     }
     if (icon.action === "music") {
+      // tạm tắt nhạc nền YouTube để khỏi đè lên nhạc trong dialog này
+      if (musicPlaying) {
+        setMusicPlaying(false);
+        setResumeYoutubeAfterModal(true);
+      }
       setModal({ type: "music" });
       return;
     }
@@ -914,6 +923,7 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
     if (celebrating) return;
     if (musicPlaying) {
       setMusicPlaying(false);
+      setResumeYoutubeAfterModal(false);
       return;
     }
     // đã mua rồi thì bật lại thoải mái, không hỏi/không tính tiền nữa
@@ -933,12 +943,19 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
 
   const closeModal = () => {
     const wasBonus = modal?.type === "double-bonus";
+    const wasMusicModal = modal?.type === "music";
     setModal(null);
     // đợi hộp thoại đóng xong rồi mới hiện lời cảm ơn, để có cảm giác 2
     // thông báo tách bạch thay vì nhảy cóc nội dung
     if (wasBonus) {
       setTimeout(() => setModal({ type: "thank-you" }), 350);
       return;
+    }
+    // đóng dialog nhạc 💖 rồi thì cho nhạc nền YouTube (nếu đang tạm dừng
+    // vì dialog này) chạy tiếp
+    if (wasMusicModal && resumeYoutubeAfterModal) {
+      setResumeYoutubeAfterModal(false);
+      setMusicPlaying(true);
     }
     // nếu dialog vừa tắt là dialog "tìm thấy..." của thứ cuối cùng trong 3
     // nhiệm vụ, thì NGAY SAU KHI đóng mới bắt đầu xếp hình trái tim
