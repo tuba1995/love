@@ -5,41 +5,79 @@ import Keypad from './Keypad';
 import FloatingHearts from './FloatingHearts';
 import { SITE } from '../data/config';
 
-export default function LoginScreen({ onSuccess }) {
+const MAX_ATTEMPTS = 3;
+
+// Cảnh báo "hài hài có kẻ gian đột nhập" — tăng dần độ khẩn cấp qua từng lần
+// nhập sai, lần thứ 3 (cuối) sẽ xoá sạch tiến trình và quay lại hộp quà.
+const INTRUDER_ALERTS = [
+  {
+    title: '🚨 Cảnh báo đột nhập!',
+    text: 'Hệ thống vừa phát hiện một kẻ lạ mặt đang cố mò mật khẩu trái tim của tụi mình 👀 Chắc chắn là người thương chứ không phải ai khác đó nha?',
+    action: 'Đã hiểu, thử lại 😅',
+  },
+  {
+    title: '🚨🚨 Nghi ngờ tăng cao!',
+    text: 'Sai lần 2 rồi đó nha... đội bảo vệ tình yêu đang được triệu tập gấp, chỉ còn đúng 1 lần thử cuối cùng thôi 😤',
+    action: 'Bình tĩnh, thử lại 🫡',
+  },
+  {
+    title: '💥 Tự huỷ kích hoạt!',
+    text: 'Sai đủ 3 lần rồi! Toàn bộ manh mối vừa bị xoá sạch, phải quay lại hộp quà tìm lại từ đầu thôi 😭🎁',
+    action: 'Về lại hộp quà 🔄',
+    final: true,
+  },
+];
+
+export default function LoginScreen({ target, onSuccess, onLockout }) {
   const [value, setValue] = useState('');
   const [error, setError] = useState(false);
   const [success, setSuccess] = useState(false);
-  const target = SITE.password;
+  const [attempts, setAttempts] = useState(0);
+  const [alert, setAlert] = useState(null);
+  // Ưu tiên mật khẩu động (mảnh ghép 1+2+3) truyền từ GiftScreen; chỉ rơi về
+  // SITE.password nếu vào thẳng màn Login mà chưa có mật khẩu nào được tính.
+  const passcode = target || SITE.password;
 
   const check = (next) => {
-    if (next.length < target.length) return;
-    if (next === target) {
+    if (next.length < passcode.length) return;
+    if (next === passcode) {
       setSuccess(true);
       setTimeout(() => onSuccess?.(), 1600);
-    } else {
-      setError(true);
-      setTimeout(() => {
-        setError(false);
-        setValue('');
-      }, 550);
+      return;
     }
+    const attemptIndex = attempts;
+    setAttempts(attemptIndex + 1);
+    setError(true);
+    setTimeout(() => {
+      setError(false);
+      setValue('');
+    }, 550);
+    setAlert(INTRUDER_ALERTS[Math.min(attemptIndex, INTRUDER_ALERTS.length - 1)]);
   };
 
   const handleDigit = (d) => {
-    if (success || value.length >= target.length) return;
+    if (success || alert || value.length >= passcode.length) return;
     const next = value + d;
     setValue(next);
     check(next);
   };
 
   const handleBackspace = () => {
-    if (success) return;
+    if (success || alert) return;
     setValue((v) => v.slice(0, -1));
   };
 
   const handleClear = () => {
-    if (success) return;
+    if (success || alert) return;
     setValue('');
+  };
+
+  const dismissAlert = () => {
+    if (alert?.final || attempts >= MAX_ATTEMPTS) {
+      onLockout?.();
+      return;
+    }
+    setAlert(null);
   };
 
   return (
@@ -106,7 +144,7 @@ export default function LoginScreen({ onSuccess }) {
                 <div
                   className={`flex flex-wrap justify-center gap-2 max-w-[280px] ${error ? 'animate-shake' : ''}`}
                 >
-                  {Array.from({ length: target.length }).map((_, i) => (
+                  {Array.from({ length: passcode.length }).map((_, i) => (
                     <div
                       key={i}
                       className={`w-8 h-10 rounded-lg border-2 flex items-center justify-center text-lg font-semibold transition-colors
@@ -127,12 +165,50 @@ export default function LoginScreen({ onSuccess }) {
                   </motion.p>
                 )}
 
-                <Keypad onDigit={handleDigit} onBackspace={handleBackspace} onClear={handleClear} disabled={success} />
+                <Keypad
+                  onDigit={handleDigit}
+                  onBackspace={handleBackspace}
+                  onClear={handleClear}
+                  disabled={success || !!alert}
+                />
               </motion.div>
             )}
           </AnimatePresence>
         </div>
       </div>
+
+      <AnimatePresence>
+        {alert && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="relative w-full max-w-sm rounded-3xl bg-linear-to-b from-white to-rose-50 p-6 text-center shadow-2xl"
+              initial={{ scale: 0.8, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.8, opacity: 0, y: 20 }}
+              transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+            >
+              <p className="text-rose-500 text-xs tracking-widest uppercase mb-3">
+                {alert.title}
+              </p>
+              <p className="text-slate-700 text-base font-medium leading-relaxed mb-6">
+                {alert.text}
+              </p>
+              <button
+                type="button"
+                onClick={dismissAlert}
+                className="px-6 py-2.5 rounded-full bg-linear-to-r from-rose-400 to-fuchsia-500 text-white text-sm font-semibold shadow-md hover:brightness-110 transition-all"
+              >
+                {alert.action}
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
