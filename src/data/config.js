@@ -6,14 +6,20 @@ export const SITE = {
   boyName: "Anh",
   girlName: "Em",
 
-  // Mật khẩu để mở khoá màn hình đăng nhập (chỉ gồm số)
+  // Mật khẩu dự phòng cho màn Login — CHỈ dùng nếu vào thẳng màn Login mà
+  // chưa có mật khẩu nào được tính (trường hợp gần như không xảy ra trong
+  // luồng chơi bình thường). Bình thường mật khẩu 6 số của màn Login được
+  // GiftScreen tự tính = mảnh ghép 1 (đáp án câu đố ngựa) + mảnh ghép 2
+  // (flower) + mảnh ghép thần bí số 3 (heart) ở lần bấm gần nhất của người
+  // chơi, xem DATE_PIECES bên dưới và hàm handleQuestContinue trong
+  // GiftScreen.jsx.
   password: "18042026",
 
   // Ngày bắt đầu yêu (hiển thị ở phần cuối)
   startDateLabel: "18 / 04 / 2026",
 
   // Tiêu đề chính Dành Tặng Người Anh Yêu "một hành trình nhỏ, đầy ắp yêu thương",
-  title: "aa",
+  title: "Một hành trình nhỏ, đầy ắp yêu thương",
   subtitle: "vv",
 };
 
@@ -81,16 +87,18 @@ export const COMING_SOON = {
 //   đố `question`; đáp án đúng luôn cố định là `answer` (giữ bí mật).
 // - flower (mảnh ghép số 2) và heart (mảnh ghép thần bí số 3): mỗi lần người
 //   chơi bấm vào mảnh ghép THẬT (kể cả bấm lại nhiều lần) đều ngẫu nhiên lại
-//   50/50 ra 1 trong 2 số bên dưới — số ở LẦN BẤM GẦN NHẤT mới là số dùng làm
-//   mật khẩu (xem icon ☁️ trong bảng nhiệm vụ để xem lại số gần nhất).
+//   1 trong các số bên dưới — chia đều tỉ lệ theo số lượng ứng viên (flower
+//   2 số nên 50/50, heart 3 số nên ~33% mỗi số) — số ở LẦN BẤM GẦN NHẤT mới
+//   là số dùng làm mật khẩu (xem icon ☁️ trong bảng nhiệm vụ để xem lại số
+//   gần nhất).
 export const DATE_PIECES = {
   horse: {
     question:
-      "Khi chị 6 tuổi, em mới bằng một nửa tuổi của chị. Vậy đến khi chị 21 tuổi, em sẽ bao nhiêu tuổi?",
+      "Khi chị 8 tuổi, em mới bằng một nửa tuổi của chị. Vậy đến khi chị 22 tuổi, em sẽ bao nhiêu tuổi?",
     answer: "18",
   },
   flower: ["10", "04"],
-  heart: ["26", "95"],
+  heart: ["95", "26", "01"],
 };
 
 // Những lời nhắn nhỏ hiện ra khi bấm các icon còn lại (🐶🦋🍀🌙) trong hộp quà.

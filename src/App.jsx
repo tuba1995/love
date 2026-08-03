@@ -14,6 +14,11 @@ const SCREENS = {
 
 function App() {
   const [screen, setScreen] = useState(SCREENS.GIFT);
+  // Mật khẩu 6 số cho màn Login sau khi hoàn thành nhiệm vụ trong hộp quà —
+  // do GiftScreen tính ra (mảnh ghép 1 + 2 + 3) và truyền lên qua
+  // onQuestComplete, vì giá trị này ngẫu nhiên theo từng lượt chơi chứ
+  // không cố định như SITE.password.
+  const [loginTarget, setLoginTarget] = useState('');
 
   return (
     <div className="min-h-svh w-full">
@@ -22,11 +27,19 @@ function App() {
           <GiftScreen
             key="gift"
             onOpen={() => setScreen(SCREENS.LOGIN)}
-            onQuestComplete={() => setScreen(SCREENS.COMING_SOON)}
+            onQuestComplete={(password) => {
+              setLoginTarget(password);
+              setScreen(SCREENS.LOGIN);
+            }}
           />
         )}
         {screen === SCREENS.LOGIN && (
-          <LoginScreen key="login" onSuccess={() => setScreen(SCREENS.MAIN)} />
+          <LoginScreen
+            key="login"
+            target={loginTarget}
+            onSuccess={() => setScreen(SCREENS.COMING_SOON)}
+            onLockout={() => setScreen(SCREENS.GIFT)}
+          />
         )}
         {screen === SCREENS.MAIN && <StaircaseJourney key="main" />}
         {screen === SCREENS.COMING_SOON && (

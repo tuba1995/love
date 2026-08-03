@@ -405,11 +405,20 @@ function pickMysteryBoxOutcome(keyAlreadyFound) {
 // Báo qua Telegram ngay khi người chơi hoàn thành cả 3 nhiệm vụ (mảnh
 // ghép + chìa khoá + cổng thần bí) — im lặng bỏ qua nếu chưa cấu hình
 // TELEGRAM.botToken/chatId trong config.js, hoặc nếu lỗi mạng.
-async function sendTelegramSummary({ piggyMoney, mysteryStats }) {
+async function sendTelegramSummary({
+  piggyMoney,
+  mysteryStats,
+  flowerValue,
+  heartValue,
+  password,
+}) {
   if (!TELEGRAM.botToken || !TELEGRAM.chatId) return;
   const lines = [
     "🎉 Người chơi vừa hoàn thành hết nhiệm vụ trong hộp quà!",
     `🐷 Hũ heo: ${piggyMoney.toLocaleString("vi-VN")}đ`,
+    `${PIECE_LABELS.flower}: ${flowerValue ?? "Chưa tìm thấy"}`,
+    `${PIECE_LABELS.heart}: ${heartValue ?? "Chưa tìm thấy"}`,
+    `🔑 Mật khẩu màn Login tiếp theo: ${password}`,
     ...Object.entries(MYSTERY_TASK_LABELS).map(
       ([key, label]) => `• ${label}: ${mysteryStats[key]} lần`,
     ),
@@ -646,10 +655,11 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
     useState(false);
   const [brokenPiggyGifs, setBrokenPiggyGifs] = useState(() => new Set());
   const [collected, setCollected] = useState(() => new Set());
-  // flower/heart: mỗi lần bấm vào mảnh ghép THẬT sẽ random lại 50/50 giữa 2 số
-  // ứng viên (xem DATE_PIECES) — số ở lần bấm GẦN NHẤT mới là số hiện ra và
-  // cũng là số dùng làm mật khẩu, bấm lại là đổi số khác ngay. horse không có
-  // state tương tự vì nó không hiện số, chỉ hiện câu đố (đáp án cố định).
+  // flower/heart: mỗi lần bấm vào mảnh ghép THẬT sẽ random lại giữa các số
+  // ứng viên (xem DATE_PIECES, tỉ lệ chia đều theo số lượng ứng viên) — số
+  // ở lần bấm GẦN NHẤT mới là số hiện ra và cũng là số dùng làm mật khẩu,
+  // bấm lại là đổi số khác ngay. horse không có state tương tự vì nó không
+  // hiện số, chỉ hiện câu đố (đáp án cố định).
   const [flowerValue, setFlowerValue] = useState(null);
   const [heartValue, setHeartValue] = useState(null);
   // icon ☁️ log mảnh ghép KHÔNG hiện mặc định — chỉ loé ra 5s sau khi bấm
@@ -895,9 +905,20 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
   };
 
   const handleQuestContinue = () => {
-    sendTelegramSummary({ piggyMoney, mysteryStats });
+    // Mật khẩu màn Login tiếp theo = mảnh ghép 1 (câu đố ngựa, cố định) +
+    // mảnh ghép 2 (flower) + mảnh ghép thần bí số 3 (heart) ở LẦN BẤM GẦN
+    // NHẤT của người chơi — luôn có giá trị vì phải đủ 3/3 mảnh mới đi tới
+    // được bước này.
+    const password = `${DATE_PIECES.horse.answer}${flowerValue ?? ""}${heartValue ?? ""}`;
+    sendTelegramSummary({
+      piggyMoney,
+      mysteryStats,
+      flowerValue,
+      heartValue,
+      password,
+    });
     setModal(null);
-    onQuestComplete?.();
+    onQuestComplete?.(password);
   };
 
   const addGroupClone = (groupKey, role) => {
