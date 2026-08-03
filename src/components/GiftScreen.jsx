@@ -12,6 +12,8 @@ import {
   FUN_GIFS,
   GIFT_BOX_GIF,
   QUEST_COMPLETE_GIF,
+  GATE_GIF,
+  MUSIC_TRAP_GIF,
   TELEGRAM,
 } from "../data/config";
 
@@ -23,40 +25,97 @@ const SPARKLES = [
 
 const BURST_RAYS = Array.from({ length: 12 }, (_, i) => i * 30);
 
-// Con thỏ mang chức năng "cổng thần bí" — cứ mỗi 20 giây sẽ đổi sang icon
+// Con hamster mang chức năng "cổng thần bí" — cứ mỗi 20 giây sẽ đổi sang icon
 // tiếp theo trong danh sách này (hết vòng thì quay lại từ đầu), để người
 // chơi không thể học thuộc icon mà đoán trước.
-const GATE_EMOJI_SET = ["🐰", "🦉", "🐿️", "🦔", "🐢"];
+const GATE_EMOJI_SET = ["🐹", "🦝", "🦡", "🐿️", "🐌"];
 
 // Hộp bẫy nguy hiểm — cứ mỗi 20 giây tự đổi sang icon tiếp theo trong danh
 // sách này. Bấm vào là mất chìa khoá đã tìm được (về lại 0/1) và con rắn
 // giữ chìa khoá cũng đổi sang hình dạng khác luôn, xem action "danger".
-const DANGER_EMOJI_SET = ["⚠️", "💀", "🧨"];
+const DANGER_EMOJI_SET = ["🚨", "☠️", "🕷️"];
 
-// Bộ icon gốc — con thỏ cố tình không được đánh dấu gì đặc biệt giữa các
+// Bẫy nhạc — cứ mỗi 25 giây tự đổi sang icon tiếp theo trong danh sách này.
+// Chỉ dùng được ĐÚNG 1 LẦN: bấm vào là tự phát nhạc nền + cho heo ăn 30k
+// luôn, không hỏi han gì cả, rồi biến mất vĩnh viễn khỏi màn hình.
+const MUSIC_TRAP_EMOJI_SET = ["🎷", "🎺", "🦉"];
+
+// Bom nhân bản hẹn giờ — cứ mỗi 15 giây tự đổi sang icon tiếp theo (KHI
+// CHƯA kích hoạt đếm ngược, ẩn đi luôn khi đang đếm ngược). Bấm vào bắt đầu
+// đếm ngược 1 phút — hết giờ mà chưa gỡ được thì mọi item hiện có trên màn
+// hình sẽ nhân đôi số lượng, xem triggerBombExplode. Không dùng 💣 trong bộ
+// này nữa để không bị nhầm với quả bom thật (id "bomb") ở dưới.
+const BOMB_CLONE_EMOJI_SET = ["🧨", "⏰", "🌪️", "🎆", "🌋"];
+
+// Dụng cụ gỡ bom — chỉ xuất hiện trong lúc bom đang đếm ngược. Bấm vào 50/50
+// gỡ được hay không, dù kết quả gì cũng biến mất tạm 3s rồi loé lại bằng 1
+// icon khác trong bộ này.
+const DEFUSE_EMOJI_SET = ["❤️", "🔨", "🗜️", "🚒", "🔩"];
+
+// nội dung dialog cho từng giai đoạn của bom nhân bản — xem modal type "bomb-clone"
+const BOMB_CLONE_MODAL_CONTENT = {
+  start: {
+    emoji: "💣",
+    title: "Bom nhân bản đã kích hoạt!",
+    text: "Đúng 1 phút nữa nếu không gỡ được, mọi item trên màn hình sẽ nhân đôi số lượng luôn đó — nhanh tìm kéo ✂️ mà gỡ đi!",
+  },
+  explode: {
+    emoji: "💥",
+    title: "Bùm! Mọi thứ nhân đôi rồi",
+    text: "Hết giờ rồi! Bom nổ tung, mọi item trên màn hình vừa nhân đôi số lượng luôn 💥",
+  },
+  success: {
+    emoji: "✂️",
+    title: "Gỡ bom thành công",
+    text: "Gỡ bom thành công! Quả bom vừa bị vô hiệu hoá rồi, huyền thoại đó 🎉",
+  },
+  fail: {
+    emoji: "😅",
+    title: "Gỡ bom thất bại",
+    text: "Gỡ bom thất bại rồi, bom vẫn đang đếm ngược, thử lại xem 😅",
+  },
+};
+
+// Bộ icon gốc — con hamster cố tình không được đánh dấu gì đặc biệt giữa các
 // icon khác, vì mục đích của trò chơi là để người dùng tự tìm ra nó.
 const ICONS = [
-  { id: "rabbit", emoji: "🐰", action: "navigate" },
-  { id: "heart-music", emoji: "💖", action: "music" },
-  { id: "heart-photo", emoji: "💕", action: "image" },
-  { id: "dog", emoji: "🐶", action: "letter", note: 0 },
-  { id: "butterfly", emoji: "🦋", action: "letter", note: 1 },
-  // 4 con thú dễ thương, x2 số tiền trong hũ heo mỗi khi bấm trúng — nếu
-  // hũ đang trống thì tặng thẳng 100.000đ luôn cho đỡ tủi thân.
-  { id: "fox", emoji: "🦊", action: "double" },
-  { id: "otter", emoji: "🦦", action: "double" },
-  { id: "chick", emoji: "🐥", action: "double" },
-  { id: "duck", emoji: "🦆", action: "double" },
+  { id: "rabbit", emoji: "🐹", action: "navigate" },
+  { id: "heart-music", emoji: "🎹", action: "music" },
+  { id: "heart-photo", emoji: "💞", action: "image" },
+  { id: "dog", emoji: "🐱", action: "letter", note: 0 },
+  { id: "butterfly", emoji: "🐝", action: "letter", note: 1 },
+  // 4 con thú dễ thương, cho heo ăn 1 khoản random 1.000–30.000đ mỗi khi
+  // bấm trúng.
+  { id: "fox", emoji: "🐼", action: "random-feed" },
+  { id: "otter", emoji: "🐨", action: "random-feed" },
+  { id: "chick", emoji: "🐣", action: "random-feed" },
+  { id: "duck", emoji: "🦢", action: "random-feed" },
   // hộp quà bí ẩn — 1 vòng quay may rủi, xem MYSTERY_BOX_OUTCOMES
-  { id: "mystery-box", emoji: "❓", action: "mystery" },
+  { id: "mystery-box", emoji: "🎲", action: "mystery" },
   // icon gợi ý — hên xui giữa 1 mẹo chơi, cho/lấy bớt tiền hũ heo, hoặc
   // chẳng có gì cả, xem HINT_OUTCOMES
-  { id: "hint", emoji: "💡", action: "hint" },
+  { id: "hint", emoji: "🔦", action: "hint" },
   // 2 icon giữ 2 con số ghép thành "ngày của chúng ta"
-  { id: "our-day-1", emoji: "💘", action: "ourday", value: "14" },
-  { id: "our-day-2", emoji: "🌹", action: "ourday", value: "02" },
+  { id: "our-day-1", emoji: "💝", action: "ourday", value: "14" },
+  { id: "our-day-2", emoji: "🌷", action: "ourday", value: "01" },
   // hộp bẫy nguy hiểm — xem DANGER_EMOJI_SET
-  { id: "danger-box", emoji: "⚠️", action: "danger" },
+  { id: "danger-box", emoji: "🚨", action: "danger" },
+  // bẫy nhạc — xem MUSIC_TRAP_EMOJI_SET, chỉ dùng được 1 lần
+  { id: "music-trap", emoji: "🎷", action: "music-trap" },
+  // icon gợi ý riêng, luôn nhắc đúng 1 nội dung cố định: cổng thần bí chỉ
+  // tồn tại 20s sau khi kích hoạt, không hên xui gì cả
+  { id: "gate-tip", emoji: "🕰️", action: "gate-tip" },
+  // icon gợi ý riêng khác, luôn nhắc đúng 1 nội dung cố định: nên tập trung
+  // tìm hết từng cụm icon một thay vì bấm lung tung khắp màn hình, không
+  // hên xui gì cả
+  { id: "focus-tip", emoji: "🔍", action: "focus-tip" },
+  // quả bom đen — 1 vòng quay may rủi giữa 3 kết quả, xem BOMB_OUTCOMES —
+  // icon này giữ nguyên 💣, không đổi
+  { id: "bomb", emoji: "💣", action: "bomb" },
+  // bom nhân bản hẹn giờ — xem BOMB_CLONE_EMOJI_SET + triggerBombExplode
+  { id: "bomb-clone", emoji: "🧨", action: "bomb-clone" },
+  // dụng cụ gỡ bom — chỉ hiện khi bom nhân bản đang đếm ngược, xem DEFUSE_EMOJI_SET
+  { id: "defuse", emoji: "🪚", action: "defuse" },
   // { id: "clover", emoji: "🍀", action: "letter", note: 2 },
   // { id: "moon", emoji: "🌙", action: "letter", note: 3 },
   // 15 icon nữa — con vật, đồ ăn và bánh, nhiều màu sắc và hài hước. Mỗi
@@ -144,49 +203,41 @@ function randomWaypoints(count) {
 // nhiều bản sao giống hệt nhau — mọi bản sao đều dùng chung icon của cả
 // nhóm, nên nhìn bề ngoài không thể phân biệt bản nào là thật. Có 3 kiểu
 // bố cục:
-//   "triple" (🐴): con thật / 1 con luôn cho heo ăn (random 1.000–20.000đ)
+//   "triple" (🐮): con thật / 1 con luôn cho heo ăn (random 1.000–20.000đ)
 //     / 1 con chỉ chuyên sinh sản — mỗi bản nó đẻ ra, khi bấm vào cũng sẽ
 //     cho heo ăn 1 khoản random.
-//   "double" (🌸): con thật / 1 con combo — vừa cho heo ăn 1 khoản
+//   "double" (🌼): con thật / 1 con combo — vừa cho heo ăn 1 khoản
 //     random, vừa đẻ thêm 1 bản sao; bản sao đó là may rủi 50/50, cộng
 //     hoặc trừ 1 khoản random.
-//   "coinflip" (❤️🐍): chỉ có đúng 1 con, không có gì fix cứng cả — mỗi
+//   "coinflip" (🧡🦎): chỉ có đúng 1 con, không có gì fix cứng cả — mỗi
 //     lần bấm vào tung xúc xắc 50/50 ngay lúc đó: hoặc nhận mảnh ghép/chìa
 //     khoá (chỉ tính lần đầu), hoặc cho heo ăn 1 khoản random.
 const CREATURE_GROUPS = {
-  horse: {
-    emoji: "🐴",
-    type: "piece",
-    value: DATE_PIECES.horse,
-    pattern: "triple",
-  },
-  flower: {
-    emoji: "🌸",
-    type: "piece",
-    value: DATE_PIECES.flower,
-    pattern: "double",
-  },
-  heart: {
-    emoji: "❤️",
-    type: "piece",
-    value: DATE_PIECES.heart,
-    pattern: "coinflip",
-  },
-  snake: { emoji: "🐍", type: "key", pattern: "coinflip" },
+  horse: { emoji: "🐮", type: "piece", pattern: "triple" },
+  flower: { emoji: "🌼", type: "piece", pattern: "double" },
+  heart: { emoji: "🧡", type: "piece", pattern: "coinflip" },
+  snake: { emoji: "🐣", type: "key", pattern: "coinflip" },
+};
+// Số thứ tự + nhãn của 3 mảnh ghép, hiện trong dialog để người chơi biết
+// cách ghép đúng thứ tự vào mật khẩu dù tìm thấy không theo thứ tự.
+const PIECE_LABELS = {
+  horse: "Mảnh ghép số 1",
+  flower: "Mảnh ghép số 2",
+  heart: "Mảnh ghép thần bí số 3",
 };
 // Cứ mỗi phút, ngựa/hoa/tim (kể cả mọi bản sao của chúng đang có trên màn
 // hình) sẽ đồng loạt đổi sang icon tiếp theo trong bộ 5 icon riêng của
 // mình, hết vòng thì quay lại từ đầu — cùng ý tưởng xoay vòng đổi lốt như
-// con thỏ cổng và tiền rơi. Con rắn có bộ đổi lốt riêng (3 icon), tự xoay
+// con hamster cổng và tiền rơi. Con rắn có bộ đổi lốt riêng (3 icon), tự xoay
 // mỗi 20 giây, và còn bị đổi ngay lập tức nếu "bẫy nguy hiểm" kích hoạt
 // (xem action "danger"), như một hình phạt kèm theo việc mất chìa khoá.
 // Đây thuần là thay đổi về mặt hình ảnh: giúp người chơi không thể học
-// thuộc "🐴 = bỏ qua được" rồi ngừng để ý sớm.
+// thuộc "🐮 = bỏ qua được" rồi ngừng để ý sớm.
 const CREATURE_DISGUISE_SETS = {
-  horse: ["🐴", "🐉", "🦄", "🦓", "🐫"],
-  flower: ["🌸", "🐓", "🌻", "🌺", "🌷"],
-  heart: ["❤️", "🐯", "💛", "💚", "💙"],
-  snake: ["🐍", "🦎", "🐊"],
+  horse: ["🐮", "🦏", "🐗", "🦌", "🐐"],
+  flower: ["🌼", "🦃", "🐫", "💐", "🌾"],
+  heart: ["🧡", "🦁", "🐶", "🐓", "🐉"],
+  snake: ["🐣", "🐊", "🦖"],
 };
 function getGroupEmoji(groupKey, index) {
   const set = CREATURE_DISGUISE_SETS[groupKey];
@@ -220,6 +271,27 @@ function initialGroupItems(points) {
   }
   return items;
 }
+// nhân bản 1 item mồi/tiền (KHÔNG bao giờ gọi với role "win"/"coinflip" —
+// đó là 2 role giữ mảnh ghép/chìa khoá thật, xem triggerBombExplode) — giữ
+// nguyên group/role, chỉ đổi id và toạ độ trôi dạt cho bản sao mới
+function cloneGuessItem(guess) {
+  guessSeq += 1;
+  return {
+    ...guess,
+    id: `${guess.group}-${guessSeq}`,
+    ...makeWaypoint([], 14),
+  };
+}
+// item cổng thần bí 🌀 xuất hiện tạm thời sau khi con hamster kích hoạt thành
+// công — cố tình dùng chung bộ icon nguỵ trang GATE_EMOJI_SET và cùng kiểu
+// trôi dạt như mọi icon khác, để không nổi bật hơn phần còn lại của màn hình
+function makeGateWindowItem() {
+  return {
+    ...makeWaypoint([], 14),
+    emoji: GATE_EMOJI_SET[Math.floor(Math.random() * GATE_EMOJI_SET.length)],
+  };
+}
+
 // chọn ngẫu nhiên 1 số tiền làm tròn nghìn trong khoảng [min, max]
 function randomAmount(min, max) {
   return Math.round((min + Math.random() * (max - min)) / 1000) * 1000;
@@ -237,8 +309,8 @@ function randomMoneyAmount() {
 // Chúng không bao giờ biến mất sau khi bấm; mỗi lần ra kết quả (+) sẽ tự
 // sinh thêm 1 đồng nữa lên màn hình. Cứ mỗi 2 phút, mọi đồng tiền trên màn
 // hình sẽ đổi sang icon tiếp theo trong bộ này (hết vòng quay lại từ đầu),
-// giống hệt cơ chế của con thỏ cổng.
-const COIN_EMOJI_SET = ["🎁", "💎", "🧧", "🎀", "🎈"];
+// giống hệt cơ chế của con hamster cổng.
+const COIN_EMOJI_SET = ["🧧", "💰", "🧿", "🔔", "🎊"];
 const MAX_PIGGY_ITEMS = 30;
 function rollPiggyOutcome() {
   return Math.random() < 0.5 ? randomMoneyAmount() : -randomMoneyAmount();
@@ -276,7 +348,22 @@ function makePiggyItem(points) {
   };
 }
 
-// Hộp quà bí ẩn ❓ — 1 vòng quay may rủi mỗi lần bấm, trọng số không cần
+// mảnh ghép "thần bí số 3" GIẢ — nguỵ trang y hệt heart thật (đổi lốt chung
+// nhịp với CREATURE_DISGUISE_SETS.heart), bấm vào hiện dialog giống hệt
+// mảnh ghép thật với số 05 để đánh lừa, nhưng không có tác dụng gì cả. Nằm
+// trong state (không phải mảng ICONS tĩnh) để bom nhân bản hẹn giờ có thể
+// nhân đôi số lượng của nó y như các item mồi khác, xem triggerBombExplode.
+const MAX_FAKE_PIECE_ITEMS = 12;
+let fakePieceSeq = 0;
+function makeFakePieceItem(points) {
+  fakePieceSeq += 1;
+  return {
+    id: `fake-piece-${fakePieceSeq}`,
+    ...makeWaypoint(points, 14),
+  };
+}
+
+// Hộp quà bí ẩn 🎲 — 1 vòng quay may rủi mỗi lần bấm, trọng số không cần
 // cộng đúng 100 (chỉ là tỉ lệ tương đối với nhau). "Chìa khoá vàng" tự
 // động bị loại khỏi vòng quay một khi đã tìm được rồi. Số tiền cộng/trừ
 // hũ heo đều random 1.000–50.000đ, không còn cố định.
@@ -292,8 +379,7 @@ const MYSTERY_BOX_OUTCOMES = [
   { weight: 55, type: "empty", text: "Không có gì đâu, rỗng tếch 😅" },
   { weight: 60, type: "empty", text: "Không có gì đâu, rỗng tếch 🤷" },
   { weight: 10, type: "key", text: "Chìa khoá vàng! ✨" },
-  { weight: 5, type: "x3", text: "X3 hũ heo! 🐷💰" },
-  { weight: 5, type: "div3", text: "Chia 3 hũ heo! 🐷➗" },
+  { weight: 10, type: "bonus" }, // cộng random 1.000–30.000đ, text random xem handleIconClick
 ];
 // 5 kiểu quà "nhiệm vụ ngoài đời" cần đếm dồn lại để tổng kết/gửi mail
 const MYSTERY_TASK_LABELS = {
@@ -342,7 +428,7 @@ async function sendTelegramSummary({ piggyMoney, mysteryStats }) {
   }
 }
 
-// icon 💡 gợi ý — hên xui 4 kiểu, trọng số chỉ tương đối với nhau
+// icon 🔦 gợi ý — hên xui 4 kiểu, trọng số chỉ tương đối với nhau
 const HINT_TEXT =
   "Trong 3 mảnh ghép, có 1 mảnh mà khi bấm vào sẽ 50% hiện ra nội dung thật, 50% là bị cúng cho heo — đừng bỏ lỡ, cứ tìm đúng icon đó rồi bấm lại lần nữa xem vận may của bạn thế nào nhé! 🔍";
 const HINT_OUTCOMES = [
@@ -359,6 +445,26 @@ function pickHintOutcome() {
     roll -= o.weight;
   }
   return HINT_OUTCOMES[HINT_OUTCOMES.length - 1];
+}
+
+// icon 💣 quả bom đen — hên xui 3 kiểu, trọng số chỉ tương đối với nhau.
+// "explode" (mất hết mảnh ghép) chỉ có mặt trong vòng quay nếu người chơi
+// đang thực sự giữ ít nhất 1 mảnh ghép, không thì mất hết cũng chẳng có ý
+// nghĩa gì.
+const BOMB_OUTCOMES = [
+  { weight: 34, type: "memory" },
+  { weight: 33, type: "explode" },
+  { weight: 33, type: "gentle" },
+];
+function pickBombOutcome(hasPieces) {
+  const pool = BOMB_OUTCOMES.filter((o) => o.type !== "explode" || hasPieces);
+  const total = pool.reduce((sum, o) => sum + o.weight, 0);
+  let roll = Math.random() * total;
+  for (const o of pool) {
+    if (roll < o.weight) return o;
+    roll -= o.weight;
+  }
+  return pool[pool.length - 1];
 }
 
 function burstHearts() {
@@ -385,6 +491,41 @@ function burstHearts() {
       scalar: 1,
     });
   }, 200);
+}
+
+// Hiệu ứng nổ khi bom nhân bản hết giờ — 1 chùm nổ to giữa màn hình kèm
+// rung nhẹ, dùng tông màu lửa/khói thay vì màu tim hồng như burstHearts()
+function burstBombExplosion() {
+  const boomShape = confetti.shapeFromText({ text: "💥", scalar: 2.6 });
+  const fireShape = confetti.shapeFromText({ text: "🔥", scalar: 2.2 });
+  const skullShape = confetti.shapeFromText({ text: "💀", scalar: 2 });
+  const colors = ["#ff4500", "#ff8c00", "#ffd700", "#1a1a1a"];
+
+  confetti({
+    particleCount: 60,
+    spread: 360,
+    startVelocity: 35,
+    ticks: 90,
+    zIndex: 60,
+    origin: { x: 0.5, y: 0.5 },
+    shapes: [boomShape, fireShape],
+    colors,
+    scalar: 1,
+  });
+
+  setTimeout(() => {
+    confetti({
+      particleCount: 35,
+      spread: 360,
+      startVelocity: 25,
+      ticks: 80,
+      zIndex: 60,
+      origin: { x: 0.5, y: 0.5 },
+      shapes: [fireShape, skullShape],
+      colors,
+      scalar: 1,
+    });
+  }, 180);
 }
 
 // Pháo hoa ăn mừng khi hoàn thành hết nhiệm vụ — 2 khẩu pháo bắn liên tục
@@ -505,9 +646,80 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
     useState(false);
   const [brokenPiggyGifs, setBrokenPiggyGifs] = useState(() => new Set());
   const [collected, setCollected] = useState(() => new Set());
+  // flower/heart: mỗi lần bấm vào mảnh ghép THẬT sẽ random lại 50/50 giữa 2 số
+  // ứng viên (xem DATE_PIECES) — số ở lần bấm GẦN NHẤT mới là số hiện ra và
+  // cũng là số dùng làm mật khẩu, bấm lại là đổi số khác ngay. horse không có
+  // state tương tự vì nó không hiện số, chỉ hiện câu đố (đáp án cố định).
+  const [flowerValue, setFlowerValue] = useState(null);
+  const [heartValue, setHeartValue] = useState(null);
+  // icon ☁️ log mảnh ghép KHÔNG hiện mặc định — chỉ loé ra 5s sau khi bấm
+  // trúng kết quả "Trí não tuổi già" của quả bom 💣 (xem BOMB_OUTCOMES)
+  const [cloudVisible, setCloudVisible] = useState(false);
+  const cloudTimeoutRef = useRef(null);
+  useEffect(() => () => clearTimeout(cloudTimeoutRef.current), []);
+  // random lại số của 1 mảnh ghép (flower/heart), lưu vào state để icon ☁️
+  // log lại được số ở lần bấm gần nhất, đồng thời trả về giá trị đó luôn để
+  // dùng ngay cho modal (tránh đọc state cũ do setState là bất đồng bộ)
+  const rerollPieceValue = (groupKey) => {
+    const candidates = DATE_PIECES[groupKey];
+    const value = candidates[Math.floor(Math.random() * candidates.length)];
+    if (groupKey === "flower") setFlowerValue(value);
+    else if (groupKey === "heart") setHeartValue(value);
+    return value;
+  };
   const [ourDayFound, setOurDayFound] = useState(() => new Set());
   const [keyFound, setKeyFound] = useState(false);
   const [gateFound, setGateFound] = useState(false);
+  const [gateGifError, setGateGifError] = useState(false);
+  // con hamster cổng thần bí KHÔNG xuất hiện ngay — đợi đúng 1 phút sau khi mở
+  // hộp quà mới loé ra (icon random trong GATE_EMOJI_SET, vẫn tự đổi lốt mỗi
+  // 20s như cũ). Bấm vào nó chỉ có 50% kích hoạt được cổng thần bí thật —
+  // trúng thì 1 item riêng xuất hiện đâu đó trên màn hình trong 20s, bấm
+  // trúng NÓ mới thực sự tính là tìm thấy cổng thần bí.
+  const [gateIconVisible, setGateIconVisible] = useState(false);
+  const [gateWindowActive, setGateWindowActive] = useState(false);
+  const [gateWindowItem, setGateWindowItem] = useState(null);
+  const gateWindowTimeoutRef = useRef(null);
+  useEffect(() => () => clearTimeout(gateWindowTimeoutRef.current), []);
+  // trật 50% thì con hamster biến mất luôn, không đứng yên cho bấm liên tục —
+  // sau đúng 10s mới loé lại, đổi sang 1 icon khác trong GATE_EMOJI_SET
+  const gateCooldownTimeoutRef = useRef(null);
+  useEffect(() => () => clearTimeout(gateCooldownTimeoutRef.current), []);
+  // rắn giữ chìa khoá — bấm vào là biến mất tạm thời, 4s sau mới hiện lại,
+  // né bấm liên tục farm chìa khoá/tiền hũ heo
+  const [snakeVisible, setSnakeVisible] = useState(true);
+  const snakeCooldownTimeoutRef = useRef(null);
+  useEffect(() => () => clearTimeout(snakeCooldownTimeoutRef.current), []);
+  // bom nhân bản hẹn giờ — bombTimerRemaining tính bằng giây, chỉ dùng để
+  // hiện đồng hồ đếm ngược; bombTimeoutRef mới là cái thực sự kích hoạt nổ
+  // sau đúng 1 phút, độc lập với việc UI có re-render đúng nhịp giây hay không
+  const [bombCloneIconIndex, setBombCloneIconIndex] = useState(() =>
+    Math.floor(Math.random() * BOMB_CLONE_EMOJI_SET.length),
+  );
+  const [bombTimerActive, setBombTimerActive] = useState(false);
+  const [bombTimerRemaining, setBombTimerRemaining] = useState(0);
+  // rung màn hình ngắn (dùng chung class .animate-shake với lúc nhập sai
+  // mật khẩu ở màn Login) đúng lúc bom nổ, tự tắt sau 450ms
+  const [bombShaking, setBombShaking] = useState(false);
+  const bombTimeoutRef = useRef(null);
+  const bombIntervalRef = useRef(null);
+  const bombShakeTimeoutRef = useRef(null);
+  useEffect(
+    () => () => {
+      clearTimeout(bombTimeoutRef.current);
+      clearInterval(bombIntervalRef.current);
+      clearTimeout(bombShakeTimeoutRef.current);
+    },
+    [],
+  );
+  // dụng cụ gỡ bom — chỉ hiện khi bombTimerActive, và tự ẩn/loé lại icon khác
+  // mỗi lần bấm (dù gỡ được hay không) giống cơ chế con hamster/con rắn
+  const [defuseIconIndex, setDefuseIconIndex] = useState(() =>
+    Math.floor(Math.random() * DEFUSE_EMOJI_SET.length),
+  );
+  const [defuseIconVisible, setDefuseIconVisible] = useState(true);
+  const defuseCooldownTimeoutRef = useRef(null);
+  useEffect(() => () => clearTimeout(defuseCooldownTimeoutRef.current), []);
   const [piggyMoney, setPiggyMoney] = useState(0);
   const [mysteryStats, setMysteryStats] = useState(() => ({
     drink: 0,
@@ -533,6 +745,12 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
   const [dangerIconIndex, setDangerIconIndex] = useState(() =>
     Math.floor(Math.random() * DANGER_EMOJI_SET.length),
   );
+  const [musicTrapIconIndex, setMusicTrapIconIndex] = useState(() =>
+    Math.floor(Math.random() * MUSIC_TRAP_EMOJI_SET.length),
+  );
+  // bẫy nhạc chỉ dùng được 1 lần — bấm xong là biến mất vĩnh viễn
+  const [musicTrapTriggered, setMusicTrapTriggered] = useState(false);
+  const [musicTrapGifError, setMusicTrapGifError] = useState(false);
   // hình dạng con rắn — tự xoay mỗi 20 giây, và cũng bị đổi ngay lập tức
   // nếu bẫy nguy hiểm kích hoạt (random luôn khi tải lại trang)
   const [snakeIconIndex, setSnakeIconIndex] = useState(() =>
@@ -546,13 +764,20 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
     const points = [];
     return [makePiggyItem(points), makePiggyItem(points)];
   });
+  const [fakePieceItems, setFakePieceItems] = useState(() => {
+    const points = [];
+    return [makeFakePieceItem(points)];
+  });
 
   const paths = useMemo(() => randomWaypoints(ICONS.length), []);
 
-  // trong lúc ăn mừng, mỗi item (icon thường + guesses + tiền rời) được
-  // gán 1 điểm trên đường trái tim, theo đúng thứ tự render bên dưới
+  // trong lúc ăn mừng, mỗi item (icon thường + guesses + tiền rời + mảnh
+  // ghép giả) được gán 1 điểm trên đường trái tim, theo đúng thứ tự render
+  // bên dưới
   const heartTargets = celebrating
-    ? heartPoints(ICONS.length + guesses.length + piggyItems.length)
+    ? heartPoints(
+        ICONS.length + guesses.length + piggyItems.length + fakePieceItems.length,
+      )
     : null;
 
   // ngựa/hoa/tim đổi sang icon tiếp theo trong bộ 5 icon nguỵ trang của
@@ -587,7 +812,7 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
     return () => clearInterval(intervalId);
   }, [opened]);
 
-  // con thỏ cổng thần bí đổi qua GATE_EMOJI_SET mỗi 20 giây, xoay hết cả 5
+  // con hamster cổng thần bí đổi qua GATE_EMOJI_SET mỗi 20 giây, xoay hết cả 5
   // icon thì quay lại từ đầu
   useEffect(() => {
     if (!opened) return;
@@ -595,6 +820,14 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
       setGateIconIndex((i) => (i + 1) % GATE_EMOJI_SET.length);
     }, 20000);
     return () => clearInterval(intervalId);
+  }, [opened]);
+
+  // con hamster cổng thần bí chỉ loé ra sau đúng 1 phút kể từ lúc mở hộp quà,
+  // không có ngay từ đầu
+  useEffect(() => {
+    if (!opened) return;
+    const timeoutId = setTimeout(() => setGateIconVisible(true), 60000);
+    return () => clearTimeout(timeoutId);
   }, [opened]);
 
   // hộp bẫy nguy hiểm đổi qua DANGER_EMOJI_SET mỗi 20 giây, xoay hết cả 3
@@ -606,6 +839,26 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
     }, 20000);
     return () => clearInterval(intervalId);
   }, [opened]);
+
+  // bẫy nhạc đổi qua MUSIC_TRAP_EMOJI_SET mỗi 25 giây — tự dừng luôn khi đã
+  // bấm trúng (biến mất vĩnh viễn, không cần đổi icon nữa)
+  useEffect(() => {
+    if (!opened || musicTrapTriggered) return;
+    const intervalId = setInterval(() => {
+      setMusicTrapIconIndex((i) => (i + 1) % MUSIC_TRAP_EMOJI_SET.length);
+    }, 25000);
+    return () => clearInterval(intervalId);
+  }, [opened, musicTrapTriggered]);
+
+  // bom nhân bản đổi qua BOMB_CLONE_EMOJI_SET mỗi 15 giây — chỉ khi CHƯA
+  // kích hoạt đếm ngược (đang đếm ngược thì icon này ẩn hẳn, xem render)
+  useEffect(() => {
+    if (!opened || bombTimerActive) return;
+    const intervalId = setInterval(() => {
+      setBombCloneIconIndex((i) => (i + 1) % BOMB_CLONE_EMOJI_SET.length);
+    }, 15000);
+    return () => clearInterval(intervalId);
+  }, [opened, bombTimerActive]);
 
   const piggyMood = getPiggyMood(piggyMoney);
 
@@ -661,15 +914,92 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
     burstHearts();
   };
 
+  // vài icon trong ICONS tự đổi lốt qua 1 bộ emoji xoay vòng riêng thay vì
+  // dùng emoji cố định khai báo sẵn — gom hết vào 1 chỗ cho gọn thay vì lặp
+  // lại ternary lồng nhau ngay trong JSX
+  const getIconEmoji = (icon) => {
+    switch (icon.id) {
+      case "rabbit":
+        return GATE_EMOJI_SET[gateIconIndex];
+      case "danger-box":
+        return DANGER_EMOJI_SET[dangerIconIndex];
+      case "music-trap":
+        return MUSIC_TRAP_EMOJI_SET[musicTrapIconIndex];
+      case "bomb-clone":
+        return BOMB_CLONE_EMOJI_SET[bombCloneIconIndex];
+      case "defuse":
+        return DEFUSE_EMOJI_SET[defuseIconIndex];
+      default:
+        return icon.emoji;
+    }
+  };
+
+  // con hamster cổng thần bí biến mất tạm thời rồi loé lại bằng 1 icon KHÁC
+  // trong bộ nguỵ trang — dùng chung cho cả 2 trường hợp bấm trúng (5s, để
+  // né spam bấm liên tục tạo nhiều cổng cùng lúc) lẫn bấm trật (10s)
+  const hideGateIconFor = (ms) => {
+    setGateIconVisible(false);
+    clearTimeout(gateCooldownTimeoutRef.current);
+    gateCooldownTimeoutRef.current = setTimeout(() => {
+      setGateIconIndex((i) => {
+        let next;
+        do {
+          next = Math.floor(Math.random() * GATE_EMOJI_SET.length);
+        } while (next === i && GATE_EMOJI_SET.length > 1);
+        return next;
+      });
+      setGateIconVisible(true);
+    }, ms);
+  };
+
+  // rắn giữ chìa khoá — bấm vào (dù trúng hay trật) đều tạm biến mất, 4s
+  // sau mới hiện lại, né bấm liên tục farm
+  const hideSnakeFor = (ms) => {
+    setSnakeVisible(false);
+    clearTimeout(snakeCooldownTimeoutRef.current);
+    snakeCooldownTimeoutRef.current = setTimeout(() => setSnakeVisible(true), ms);
+  };
+
   const handleIconClick = (icon) => {
     // đang xếp hình trái tim ăn mừng — khoá hết mọi click để không có gì
     // phá ngang chuỗi hoạt cảnh (pháo hoa/dialog) đang chờ chạy
     if (celebrating) return;
     if (icon.action === "navigate") {
-      setGateFound(true);
+      if (gateFound) {
+        setModal({
+          type: "fun-text",
+          emoji: GATE_EMOJI_SET[gateIconIndex],
+          text: "Cổng thần bí đã mở rồi, không cần tìm nữa đâu 😄",
+        });
+        return;
+      }
+      // chỉ 50% là kích hoạt được cổng thần bí thật — trật thì con hamster biến
+      // mất luôn (không đứng yên cho bấm liên tục ăn may), đúng 10s sau mới
+      // loé lại bằng 1 icon khác trong bộ nguỵ trang
+      if (Math.random() >= 0.5) {
+        hideGateIconFor(10000);
+        setModal({
+          type: "fun-text",
+          emoji: GATE_EMOJI_SET[gateIconIndex],
+          text: "Không phải, không có gì hãy thử lại vận may 🍀",
+        });
+        return;
+      }
+      // kích hoạt thành công — con hamster cũng biến mất 5s (né bấm liên tục
+      // tạo chồng nhiều cổng cùng lúc), sinh 1 item riêng trôi dạt trên màn
+      // hình giống hệt các icon khác (không nổi bật), chỉ tồn tại 20s, bấm
+      // trúng NÓ mới thực sự tính là tìm thấy cổng
+      hideGateIconFor(5000);
+      setGateWindowItem(makeGateWindowItem());
+      setGateWindowActive(true);
+      clearTimeout(gateWindowTimeoutRef.current);
+      gateWindowTimeoutRef.current = setTimeout(
+        () => setGateWindowActive(false),
+        20000,
+      );
       setModal({
-        type: "letter",
-        text: `Đường dẫn để sang trang tiếp ${GATE_EMOJI_SET[gateIconIndex]}`,
+        type: "gate-hint",
+        text: "Cổng thần bí đã xuất hiện, chỉ tồn tại 20s thôi, nhanh tay tìm nó nhé!",
       });
       return;
     }
@@ -686,15 +1016,10 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
       setModal({ type: "image" });
       return;
     }
-    if (icon.action === "double") {
-      if (piggyMoney <= 0) {
-        setPiggyMoney(100000);
-        setModal({ type: "double-bonus", emoji: icon.emoji });
-      } else {
-        const amount = piggyMoney * 2;
-        setPiggyMoney(amount);
-        setModal({ type: "double", emoji: icon.emoji, amount });
-      }
+    if (icon.action === "random-feed") {
+      const amount = randomAmount(1000, 30000);
+      setPiggyMoney((m) => m + amount);
+      setModal({ type: "feed", amount });
       return;
     }
     if (icon.action === "mystery") {
@@ -710,10 +1035,10 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
         const amount = randomAmount(1000, 50000);
         setPiggyMoney((m) => m + amount);
         text = `Xui rồi, phải cộng thêm ${amount.toLocaleString("vi-VN")}đ vào hũ heo 😅`;
-      } else if (outcome.type === "x3") {
-        setPiggyMoney((m) => m * 3);
-      } else if (outcome.type === "div3") {
-        setPiggyMoney((m) => Math.round(m / 3));
+      } else if (outcome.type === "bonus") {
+        const amount = randomAmount(1000, 30000);
+        setPiggyMoney((m) => m + amount);
+        text = `May quá, được cộng thêm ${amount.toLocaleString("vi-VN")}đ vào hũ heo! 🎉`;
       } else if (MYSTERY_TASK_LABELS[outcome.type]) {
         setMysteryStats((s) => ({
           ...s,
@@ -741,6 +1066,74 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
           emoji: icon.emoji,
           text: FUN_TEXTS[Math.floor(Math.random() * FUN_TEXTS.length)],
         });
+      }
+      return;
+    }
+    if (icon.action === "gate-tip") {
+      setModal({
+        type: "hint",
+        text: "Cổng thần bí chỉ tồn tại 20s, nhanh tay tìm được nó nhé!",
+      });
+      return;
+    }
+    if (icon.action === "focus-tip") {
+      setModal({
+        type: "hint",
+        text: "Hãy tập trung để ý và nên tìm hết từng cụm icon một trước khi chuyển sang cụm khác nhé!",
+      });
+      return;
+    }
+    if (icon.action === "bomb") {
+      const outcome = pickBombOutcome(collected.size > 0);
+      setModal({ type: "bomb", outcome: outcome.type });
+      return;
+    }
+    if (icon.action === "bomb-clone") {
+      // đã có 1 quả đang đếm ngược rồi — bấm thêm không tạo quả thứ 2
+      if (bombTimerActive) {
+        setModal({
+          type: "fun-text",
+          emoji: BOMB_CLONE_EMOJI_SET[bombCloneIconIndex],
+          text: "Bom đang đếm ngược rồi, không cần bấm nữa đâu 😅",
+        });
+        return;
+      }
+      setBombTimerActive(true);
+      setBombTimerRemaining(60);
+      setDefuseIconVisible(true);
+      setDefuseIconIndex(Math.floor(Math.random() * DEFUSE_EMOJI_SET.length));
+      clearInterval(bombIntervalRef.current);
+      bombIntervalRef.current = setInterval(() => {
+        setBombTimerRemaining((s) => Math.max(0, s - 1));
+      }, 1000);
+      clearTimeout(bombTimeoutRef.current);
+      bombTimeoutRef.current = setTimeout(triggerBombExplode, 60 * 1000);
+      setModal({ type: "bomb-clone", kind: "start" });
+      return;
+    }
+    if (icon.action === "defuse") {
+      // phòng trường hợp bom vừa nổ/vừa được gỡ đúng lúc này (hiếm khi xảy
+      // ra vì icon này đã ẩn theo bombTimerActive, nhưng vẫn chốt lại cho chắc)
+      if (!bombTimerActive) return;
+      setDefuseIconVisible(false);
+      clearTimeout(defuseCooldownTimeoutRef.current);
+      defuseCooldownTimeoutRef.current = setTimeout(() => {
+        setDefuseIconIndex((i) => {
+          let next;
+          do {
+            next = Math.floor(Math.random() * DEFUSE_EMOJI_SET.length);
+          } while (next === i && DEFUSE_EMOJI_SET.length > 1);
+          return next;
+        });
+        setDefuseIconVisible(true);
+      }, 3000);
+      if (Math.random() < 0.5) {
+        setBombTimerActive(false);
+        clearTimeout(bombTimeoutRef.current);
+        clearInterval(bombIntervalRef.current);
+        setModal({ type: "bomb-clone", kind: "success" });
+      } else {
+        setModal({ type: "bomb-clone", kind: "fail" });
       }
       return;
     }
@@ -786,6 +1179,17 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
         return next;
       });
       setModal({ type: "danger" });
+      return;
+    }
+    if (icon.action === "music-trap") {
+      // dùng 1 lần duy nhất — bấm là tự phát nhạc nền + cho heo ăn 30k luôn,
+      // không hỏi han gì cả, coi như đã "mua" nhạc rồi nên bật/tắt sau này
+      // thoải mái không bị hỏi lại
+      setMusicTrapTriggered(true);
+      setPiggyMoney((m) => m + 30000);
+      setMusicPurchased(true);
+      setMusicPlaying(true);
+      setModal({ type: "music-trap" });
       return;
     }
     if (icon.action === "piece") {
@@ -838,10 +1242,15 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
           next.add(guess.id);
           setCollected(next);
           if (next.size === 3) burstHearts();
+          // horse không có số (chỉ hiện câu đố) — flower thì mỗi lần bấm vào
+          // con thật đều random lại số, lấy đúng lần bấm gần nhất
+          const value =
+            guess.group === "horse" ? undefined : rerollPieceValue(guess.group);
           setModal({
             type: "piece",
             emoji,
-            value: group.value,
+            group: guess.group,
+            value,
             count: next.size,
           });
         } else {
@@ -885,11 +1294,26 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
         return;
       }
       case "coinflip": {
+        // rắn giữ chìa khoá — bấm là biến mất tạm 4s, bất kể kết quả gì
+        if (guess.group === "snake") hideSnakeFor(4000);
+        const rewardKey = `${guess.group}-piece`;
+        // đã tìm ra mảnh ghép này rồi (biết chắc đây là con thật) thì bấm lại
+        // luôn hiện lại mảnh ghép, không hên xui nữa — chỉ random lại SỐ mới
+        // mỗi lần bấm, lấy đúng lần bấm gần nhất
+        if (group.type === "piece" && collected.has(rewardKey)) {
+          setModal({
+            type: "piece",
+            emoji,
+            group: guess.group,
+            value: rerollPieceValue(guess.group),
+            count: collected.size,
+          });
+          return;
+        }
         // tung ngay lúc bấm, không phụ thuộc bản sao nào cả — nếu trúng
         // mảnh ghép/chìa khoá mà đã có rồi thì coi như cho heo ăn luôn,
         // để bấm lần nào cũng có tác dụng
         const wonSomething = Math.random() < 0.5;
-        const rewardKey = `${guess.group}-piece`;
         if (wonSomething && group.type === "piece" && !collected.has(rewardKey)) {
           const next = new Set(collected);
           next.add(rewardKey);
@@ -898,7 +1322,8 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
           setModal({
             type: "piece",
             emoji,
-            value: group.value,
+            group: guess.group,
+            value: rerollPieceValue(guess.group),
             count: next.size,
           });
           return;
@@ -916,6 +1341,76 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
       default:
         return;
     }
+  };
+
+  // item tạm thời do "navigate" (con hamster cổng thần bí) kích hoạt ra — bấm
+  // trúng nó trong đúng 20s mới thực sự tính là tìm thấy cổng
+  const handleGateWindowClick = () => {
+    if (celebrating) return;
+    setGateFound(true);
+    clearTimeout(gateWindowTimeoutRef.current);
+    setGateWindowActive(false);
+    setModal({ type: "gate-found" });
+  };
+
+  // hết 1 phút mà chưa gỡ được bom nhân bản — nhân đôi số lượng mọi item
+  // mồi/trang trí đang có trên màn hình: item mồi trong guesses, tiền rời
+  // (piggyItems) và mảnh ghép giả (fakePieceItems); có tôn trọng các trần
+  // MAX_ITEMS_PER_GROUP/MAX_PIGGY_ITEMS/MAX_FAKE_PIECE_ITEMS sẵn có để
+  // tránh phình quá đà. Bấm lại bom nhân bản sau khi nổ vẫn hoạt động bình
+  // thường — nếu lại không gỡ kịp thì sẽ nhân đôi tiếp trên số lượng HIỆN
+  // CÓ (đã nhân đôi từ lần trước), không giới hạn số lần, chỉ bị chặn bởi
+  // các trần ở trên.
+  const triggerBombExplode = () => {
+    setBombTimerActive(false);
+    clearInterval(bombIntervalRef.current);
+    setDefuseIconVisible(false);
+    setGuesses((prev) => {
+      const counts = {};
+      prev.forEach((g) => {
+        counts[g.group] = (counts[g.group] || 0) + 1;
+      });
+      const additions = [];
+      prev.forEach((g) => {
+        // KHÔNG nhân bản item nhiệm vụ thật (mảnh ghép/chìa khoá) — role
+        // "win" và "coinflip" là 2 role giữ mảnh ghép/chìa khoá thật của
+        // từng nhóm, chỉ nhân bản mấy item mồi/tiền (feedFixed,
+        // growFeedRandom, cloneFeedRandom, comboFeedAndGrow, cloneRandomSign)
+        if (g.role === "win" || g.role === "coinflip") return;
+        if (counts[g.group] >= MAX_ITEMS_PER_GROUP) return;
+        additions.push(cloneGuessItem(g));
+        counts[g.group] += 1;
+      });
+      return [...prev, ...additions];
+    });
+    setPiggyItems((prev) => {
+      const room = Math.max(0, MAX_PIGGY_ITEMS - prev.length);
+      const toAdd = Math.min(prev.length, room);
+      return [...prev, ...Array.from({ length: toAdd }, () => makePiggyItem([]))];
+    });
+    setFakePieceItems((prev) => {
+      const room = Math.max(0, MAX_FAKE_PIECE_ITEMS - prev.length);
+      const toAdd = Math.min(prev.length, room);
+      return [...prev, ...Array.from({ length: toAdd }, () => makeFakePieceItem([]))];
+    });
+    burstBombExplosion();
+    setBombShaking(true);
+    clearTimeout(bombShakeTimeoutRef.current);
+    bombShakeTimeoutRef.current = setTimeout(() => setBombShaking(false), 450);
+    setModal({ type: "bomb-clone", kind: "explode" });
+  };
+
+  // hiện dialog giống hệt mảnh ghép thần bí số 3 (heart) thật, số 05 cố
+  // định để đánh lừa — KHÔNG cộng vào collected, không ảnh hưởng gì cả
+  const handleFakePieceClick = () => {
+    if (celebrating) return;
+    setModal({
+      type: "piece",
+      emoji: getGroupEmoji("heart", creatureIconIndex),
+      group: "heart",
+      value: "05",
+      count: collected.size,
+    });
   };
 
   const handlePiggyItemClick = () => {
@@ -960,20 +1455,35 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
   };
 
   const closeModal = () => {
-    const wasBonus = modal?.type === "double-bonus";
     const wasMusicModal = modal?.type === "music";
+    const wasBombMemory = modal?.type === "bomb" && modal.outcome === "memory";
+    const wasBombExplode = modal?.type === "bomb" && modal.outcome === "explode";
     setModal(null);
-    // đợi hộp thoại đóng xong rồi mới hiện lời cảm ơn, để có cảm giác 2
-    // thông báo tách bạch thay vì nhảy cóc nội dung
-    if (wasBonus) {
-      setTimeout(() => setModal({ type: "thank-you" }), 350);
-      return;
-    }
     // đóng dialog nhạc 💖 rồi thì cho nhạc nền YouTube (nếu đang tạm dừng
     // vì dialog này) chạy tiếp
     if (wasMusicModal && resumeYoutubeAfterModal) {
       setResumeYoutubeAfterModal(false);
       setMusicPlaying(true);
+    }
+    // "Trí não tuổi già" — đóng dialog thì icon ☁️ mới loé ra, tự ẩn lại sau
+    // đúng 5s (bấm trúng nhiều lần liên tiếp thì tính lại 5s từ lần cuối)
+    if (wasBombMemory) {
+      setCloudVisible(true);
+      clearTimeout(cloudTimeoutRef.current);
+      cloudTimeoutRef.current = setTimeout(() => setCloudVisible(false), 5000);
+    }
+    // "Nổ tung" — mất hết mảnh ghép đã tìm được, reset luôn số flower/heart vì
+    // giờ không còn giữ mảnh nào để mà "biết" số nữa. Return sớm ở đây để
+    // không dùng `collected` (biến đọc từ closure, chưa cập nhật kịp do
+    // setState bất đồng bộ) đi kiểm tra điều kiện ăn mừng bên dưới — tránh
+    // pháo hoa/dialog chúc mừng bắn nhầm ngay lúc vừa mất sạch mảnh ghép.
+    if (wasBombExplode) {
+      setCollected(new Set());
+      setFlowerValue(null);
+      setHeartValue(null);
+      setQuestNotified(false);
+      setCelebrating(false);
+      return;
     }
     // nếu dialog vừa tắt là dialog "tìm thấy..." của thứ cuối cùng trong 3
     // nhiệm vụ, thì NGAY SAU KHI đóng mới bắt đầu xếp hình trái tim
@@ -984,7 +1494,7 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
 
   return (
     <motion.div
-      className="relative w-full min-h-svh flex flex-col items-center justify-center overflow-hidden bg-linear-to-b from-[#2b1330] via-[#3a1240] to-[#1a0f1f]"
+      className={`relative w-full min-h-svh flex flex-col items-center justify-center overflow-hidden bg-linear-to-b from-[#2b1330] via-[#3a1240] to-[#1a0f1f] ${bombShaking ? "animate-shake" : ""}`}
       exit={{ opacity: 0, scale: 1.05 }}
       transition={{ duration: 0.6 }}
     >
@@ -1042,6 +1552,22 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
             📊
           </button>
 
+          {/* icon ☁️ log mảnh ghép — KHÔNG hiện mặc định, chỉ loé ra 5s sau
+              khi bấm trúng "Trí não tuổi già" từ quả bom 💣 (xem closeModal) */}
+          {cloudVisible && (
+            <>
+              <span className="w-px h-8 bg-rose-200 shrink-0" />
+              <button
+                type="button"
+                title="Xem log số mảnh ghép ở lần bấm gần nhất"
+                onClick={() => setModal({ type: "cloud-log" })}
+                className="shrink-0 text-lg"
+              >
+                ☁️
+              </button>
+            </>
+          )}
+
           <span className="w-px h-8 bg-rose-200 shrink-0" />
 
           <button
@@ -1060,6 +1586,32 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
           </button>
         </div>
       )}
+
+      {/* đồng hồ đếm ngược bom nhân bản — nổi bật ngay giữa màn hình, không
+          giấu trong bảng nhiệm vụ, để không ai lỡ quên đang có bom đang chạy */}
+      <AnimatePresence>
+        {bombTimerActive && (
+          <motion.div
+            className="fixed top-3 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 rounded-2xl bg-black/70 backdrop-blur-sm px-4 py-2 shadow-lg border border-red-400/60"
+            initial={{ opacity: 0, y: -16, scale: 0.8 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -16, scale: 0.8 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          >
+            <motion.span
+              className="text-2xl"
+              animate={{ scale: [1, 1.3, 1], rotate: [0, -8, 8, 0] }}
+              transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut" }}
+            >
+              💣
+            </motion.span>
+            <span className="text-red-400 font-bold text-xl tabular-nums tracking-wider">
+              {Math.floor(bombTimerRemaining / 60)}:
+              {String(bombTimerRemaining % 60).padStart(2, "0")}
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {musicPlaying && (
         <iframe
@@ -1097,6 +1649,16 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
       {/* các icon bung ra và trôi dạt khắp màn hình, kể cả các góc */}
       {opened &&
         ICONS.map((icon, i) => {
+          // con hamster cổng thần bí chưa tới lượt loé ra (chưa đủ 1 phút)
+          if (icon.id === "rabbit" && !gateIconVisible) return null;
+          // bẫy nhạc đã dùng rồi — biến mất vĩnh viễn
+          if (icon.id === "music-trap" && musicTrapTriggered) return null;
+          // bom nhân bản đang đếm ngược — ẩn để không bấm tạo quả thứ 2
+          if (icon.id === "bomb-clone" && bombTimerActive) return null;
+          // dụng cụ gỡ bom chỉ hiện khi có bom đang đếm ngược VÀ chưa trong lúc
+          // ẩn tạm 3s sau lần bấm gần nhất
+          if (icon.id === "defuse" && !(bombTimerActive && defuseIconVisible))
+            return null;
           const heart = heartTargets ? heartTargets[i] : null;
           return (
             <motion.div
@@ -1136,21 +1698,53 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
                   whileHover={{ scale: 1.2 }}
                   whileTap={{ scale: 0.85 }}
                 >
-                  {icon.id === "rabbit"
-                    ? GATE_EMOJI_SET[gateIconIndex]
-                    : icon.id === "danger-box"
-                      ? DANGER_EMOJI_SET[dangerIconIndex]
-                      : icon.emoji}
+                  {getIconEmoji(icon)}
                 </motion.button>
               </motion.div>
             </motion.div>
           );
         })}
 
+      {/* item cổng thần bí tạm thời — chỉ tồn tại 20s, trôi dạt và random
+          toạ độ y hệt icon thường (xem makeGateWindowItem), cố tình không
+          làm nổi bật để hoà lẫn vào đám icon còn lại trên màn hình */}
+      {opened && gateWindowActive && gateWindowItem && (
+        <motion.div
+          className="absolute top-0 left-0 z-30 -ml-4 -mt-4 sm:-ml-5 sm:-mt-5"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4 }}
+        >
+          <motion.div
+            animate={{ x: gateWindowItem.x, y: gateWindowItem.y }}
+            transition={{
+              duration: gateWindowItem.duration,
+              delay: gateWindowItem.delay,
+              times: gateWindowItem.times,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          >
+            <motion.button
+              type="button"
+              aria-label="Mở bất ngờ"
+              onClick={handleGateWindowClick}
+              className="text-3xl sm:text-4xl drop-shadow-lg outline-none block"
+              whileHover={{ scale: 1.2 }}
+              whileTap={{ scale: 0.85 }}
+            >
+              {gateWindowItem.emoji}
+            </motion.button>
+          </motion.div>
+        </motion.div>
+      )}
+
       {/* các nhóm đoán "con nào là thật" — mỗi mảnh bí mật có nhiều bản
           giống hệt nhau, chỉ 1 bản trong mỗi nhóm thực sự giữ nó */}
       {opened &&
         guesses.map((guess, i) => {
+          // rắn đang trong 4s "biến mất" sau lần bấm gần nhất
+          if (guess.group === "snake" && !snakeVisible) return null;
           const heart = heartTargets ? heartTargets[ICONS.length + i] : null;
           return (
             <motion.div
@@ -1261,6 +1855,63 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
                   whileTap={{ scale: 0.85 }}
                 >
                   {COIN_EMOJI_SET[coinIconIndex]}
+                </motion.button>
+              </motion.div>
+            </motion.div>
+          );
+        })}
+
+      {/* mảnh ghép "thần bí số 3" GIẢ — nguỵ trang y hệt heart thật, bấm vào
+          hiện dialog giống hệt mảnh ghép thật với số 05 để đánh lừa, không
+          có tác dụng gì cả. Bom nhân bản hẹn giờ có thể nhân đôi số lượng
+          của nhóm này, xem triggerBombExplode. */}
+      {opened &&
+        fakePieceItems.map((item, i) => {
+          const offset = ICONS.length + guesses.length + piggyItems.length + i;
+          const heart = heartTargets ? heartTargets[offset] : null;
+          return (
+            <motion.div
+              key={item.id}
+              className="absolute top-0 left-0 z-30 -ml-4 -mt-4 sm:-ml-5 sm:-mt-5"
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{
+                duration: 0.4,
+                delay: i < 4 ? 0.2 + i * 0.05 : 0,
+                type: "spring",
+                stiffness: 260,
+                damping: 18,
+              }}
+            >
+              <motion.div
+                animate={
+                  heart ? { x: heart.x, y: heart.y } : { x: item.x, y: item.y }
+                }
+                transition={
+                  heart
+                    ? {
+                        duration: 1.2,
+                        delay: (offset / heartTargets.length) * 0.6,
+                        ease: "easeOut",
+                      }
+                    : {
+                        duration: item.duration,
+                        delay: item.delay,
+                        times: item.times,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }
+                }
+              >
+                <motion.button
+                  type="button"
+                  aria-label="Mở bất ngờ"
+                  onClick={handleFakePieceClick}
+                  className="text-3xl sm:text-4xl drop-shadow-lg outline-none block"
+                  whileHover={{ scale: 1.2 }}
+                  whileTap={{ scale: 0.85 }}
+                >
+                  {getGroupEmoji("heart", creatureIconIndex)}
                 </motion.button>
               </motion.div>
             </motion.div>
@@ -1461,12 +2112,21 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
               {modal.type === "piece" && (
                 <div>
                   <div className="text-4xl mb-2">{modal.emoji}</div>
-                  <p className="text-rose-500 text-xs tracking-widest uppercase mb-3">
+                  <p className="text-rose-500 text-xs tracking-widest uppercase mb-1">
                     Mảnh ghép bí mật
                   </p>
-                  <p className="font-script text-6xl text-fuchsia-700 mb-4">
-                    {modal.value}
+                  <p className="text-fuchsia-500 text-xs font-semibold mb-3">
+                    {PIECE_LABELS[modal.group]}
                   </p>
+                  {modal.group === "horse" ? (
+                    <p className="text-slate-700 text-base font-medium leading-relaxed mb-4">
+                      {DATE_PIECES.horse.question}
+                    </p>
+                  ) : (
+                    <p className="font-script text-6xl text-fuchsia-700 mb-4">
+                      {modal.value}
+                    </p>
+                  )}
                   {modal.count < 3 ? (
                     <p className="text-sm text-slate-600">
                       Bạn đã tìm được {modal.count}/3 mảnh ghép rồi đó, tìm nốt
@@ -1474,8 +2134,7 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
                     </p>
                   ) : (
                     <p className="text-sm text-slate-600 leading-relaxed">
-                      Bạn đã tìm đủ 3 mảnh ghép rồi! Ghép lại xem nào... đó
-                      chính là ngày mình chính thức yêu nhau đấy 💕
+                      Bạn đã tìm đủ 3 mảnh ghép rồi!  💕
                     </p>
                   )}
                 </div>
@@ -1494,8 +2153,7 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
                     <p className="text-sm text-slate-600">Tung hoả mù</p>
                   ) : (
                     <p className="text-sm text-slate-600 leading-relaxed">
-                      Bạn đã tìm đủ 2 con số rồi! Ghép lại xem nào... 14/02 —
-                      ngày của chúng ta 💕
+                      Thật thật giả giả 💕
                     </p>
                   )}
                 </div>
@@ -1524,6 +2182,39 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
                   <p className="text-slate-700 leading-relaxed">
                     Bạn vừa nhặt được một chiếc chìa khoá bí ẩn. Không biết
                     nó mở được gì nhỉ...
+                  </p>
+                </div>
+              )}
+
+              {modal.type === "gate-hint" && (
+                <div>
+                  <div className="text-4xl mb-2">🌀</div>
+                  <p className="text-rose-500 text-xs tracking-widest uppercase mb-3">
+                    Cổng thần bí xuất hiện!
+                  </p>
+                  <p className="text-slate-700 text-lg font-medium leading-relaxed">
+                    {modal.text}
+                  </p>
+                </div>
+              )}
+
+              {modal.type === "gate-found" && (
+                <div>
+                  {GATE_GIF && !gateGifError ? (
+                    <img
+                      src={GATE_GIF}
+                      alt="Cổng thần bí"
+                      className="w-28 h-28 mx-auto mb-3 rounded-2xl object-cover shadow-md"
+                      onError={() => setGateGifError(true)}
+                    />
+                  ) : (
+                    <div className="text-6xl mb-3">🌀</div>
+                  )}
+                  <p className="text-rose-500 text-xs tracking-widest uppercase mb-3">
+                    Tìm thấy cổng thần bí
+                  </p>
+                  <p className="text-slate-700 leading-relaxed">
+                    Chính xác rồi! Bạn vừa mở được cổng thần bí 🌀
                   </p>
                 </div>
               )}
@@ -1593,44 +2284,6 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
                 </div>
               )}
 
-              {modal.type === "double" && (
-                <div>
-                  <div className="text-4xl mb-2">{modal.emoji}</div>
-                  <p className="text-rose-500 text-xs tracking-widest uppercase mb-3">
-                    Nhân đôi thần kỳ
-                  </p>
-                  <p className="text-slate-700 text-lg font-medium leading-relaxed">
-                    {modal.emoji} vừa nhân đôi hũ heo! Giờ có{" "}
-                    {modal.amount.toLocaleString("vi-VN")}đ rồi 🎉
-                  </p>
-                </div>
-              )}
-
-              {modal.type === "double-bonus" && (
-                <div>
-                  <div className="text-4xl mb-2">{modal.emoji}</div>
-                  <p className="text-rose-500 text-xs tracking-widest uppercase mb-3">
-                    Hũ heo trống trơn
-                  </p>
-                  <p className="text-slate-700 text-lg font-medium leading-relaxed">
-                    {modal.emoji} thương tình tặng thẳng 100.000đ để hũ heo đỡ
-                    tủi thân!
-                  </p>
-                </div>
-              )}
-
-              {modal.type === "thank-you" && (
-                <div>
-                  <div className="text-4xl mb-2">🙏</div>
-                  <p className="text-rose-500 text-xs tracking-widest uppercase mb-3">
-                    Lời cảm ơn
-                  </p>
-                  <p className="text-slate-700 text-lg font-medium leading-relaxed">
-                    Cảm ơn nhà hảo tâm 💕
-                  </p>
-                </div>
-              )}
-
               {modal.type === "mystery" && (
                 <div>
                   <div className="text-4xl mb-2">🎁</div>
@@ -1655,6 +2308,46 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
                   </p>
                   <p className="text-slate-700 text-lg font-medium leading-relaxed">
                     {modal.text}
+                  </p>
+                </div>
+              )}
+
+              {modal.type === "bomb" && (
+                <div>
+                  <div className="text-4xl mb-2">
+                    {modal.outcome === "memory"
+                      ? "🧠"
+                      : modal.outcome === "explode"
+                        ? "💥"
+                        : "😇"}
+                  </div>
+                  <p className="text-rose-500 text-xs tracking-widest uppercase mb-3">
+                    {modal.outcome === "memory"
+                      ? "Trí não tuổi già"
+                      : modal.outcome === "explode"
+                        ? "Nổ tung"
+                        : "Boom hiền lành"}
+                  </p>
+                  <p className="text-slate-700 text-lg font-medium leading-relaxed">
+                    {modal.outcome === "memory"
+                      ? "Một item nhỏ đã xuất hiện trên màn hình sẽ giúp bạn nhớ lại được những ký ức cũ. Nhanh tay lẹ mắt nhé, nó chỉ tồn tại trong 5s thôi — đừng bỏ lỡ cơ hội này!"
+                      : modal.outcome === "explode"
+                        ? "Xin chúc mừng bạn, bạn đã mất toàn bộ mảnh ghép rồi 💥"
+                        : "Boom hiền lành không chỉ mang lại vận xui mà nó còn mang những giá trị đặc biệt, thử vận may nhá 😇"}
+                  </p>
+                </div>
+              )}
+
+              {modal.type === "bomb-clone" && (
+                <div>
+                  <div className="text-4xl mb-2">
+                    {BOMB_CLONE_MODAL_CONTENT[modal.kind].emoji}
+                  </div>
+                  <p className="text-rose-500 text-xs tracking-widest uppercase mb-3">
+                    {BOMB_CLONE_MODAL_CONTENT[modal.kind].title}
+                  </p>
+                  <p className="text-slate-700 text-lg font-medium leading-relaxed">
+                    {BOMB_CLONE_MODAL_CONTENT[modal.kind].text}
                   </p>
                 </div>
               )}
@@ -1694,6 +2387,29 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
                         ))}
                     </ul>
                   )}
+                </div>
+              )}
+
+              {modal.type === "cloud-log" && (
+                <div>
+                  <div className="text-4xl mb-2">☁️</div>
+                  <p className="text-rose-500 text-xs tracking-widest uppercase mb-3">
+                    Log số mảnh ghép
+                  </p>
+                  <ul className="text-sm text-slate-700 text-left space-y-2 mb-3">
+                    <li className="flex items-center justify-between gap-3">
+                      <span>{PIECE_LABELS.flower}</span>
+                      <span className="font-semibold text-rose-600 shrink-0">
+                        {flowerValue ?? "Chưa tìm thấy"}
+                      </span>
+                    </li>
+                    <li className="flex items-center justify-between gap-3">
+                      <span>{PIECE_LABELS.heart}</span>
+                      <span className="font-semibold text-rose-600 shrink-0">
+                        {heartValue ?? "Chưa tìm thấy"}
+                      </span>
+                    </li>
+                  </ul>
                 </div>
               )}
 
@@ -1760,6 +2476,27 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
                   ) : (
                     <CuteAnimatedScene emoji={modal.emoji} />
                   )}
+                </div>
+              )}
+
+              {modal.type === "music-trap" && (
+                <div>
+                  <p className="text-rose-500 text-xs tracking-widest uppercase mb-3">
+                    Bẫy nhạc 🎶
+                  </p>
+                  {!musicTrapGifError ? (
+                    <img
+                      src={MUSIC_TRAP_GIF}
+                      alt="Lêu lêu"
+                      className="w-full rounded-2xl shadow-md mb-3"
+                      onError={() => setMusicTrapGifError(true)}
+                    />
+                  ) : (
+                    <div className="text-6xl mb-3">🎶</div>
+                  )}
+                  <p className="text-slate-700 text-lg font-medium leading-relaxed">
+                    Lêu lêu vẫn phải mất tiền nghe nhạc
+                  </p>
                 </div>
               )}
 

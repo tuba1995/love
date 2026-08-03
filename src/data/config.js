@@ -12,9 +12,9 @@ export const SITE = {
   // Ngày bắt đầu yêu (hiển thị ở phần cuối)
   startDateLabel: "18 / 04 / 2026",
 
-  // Tiêu đề chính
-  title: "Dành Tặng Người Anh Yêu",
-  subtitle: "một hành trình nhỏ, đầy ắp yêu thương",
+  // Tiêu đề chính Dành Tặng Người Anh Yêu "một hành trình nhỏ, đầy ắp yêu thương",
+  title: "aa",
+  subtitle: "vv",
 };
 
 // Bài hát phát khi bấm icon 💖 trong hộp quà.
@@ -39,6 +39,16 @@ export const GIFT_BOX_GIF =
 export const QUEST_COMPLETE_GIF =
   "https://media.giphy.com/media/SHcflRDy8kNXPoG69U/giphy.gif";
 
+// Ảnh GIF hiện trong dialog khi tìm thấy cổng thần bí 🌀 (nếu lỗi/mất mạng
+// thì app tự hiện icon 🌀 thay thế). Để trống thì luôn hiện icon thay thế.
+export const GATE_GIF = "https://media.giphy.com/media/atLkXCLfT1dza/giphy.gif";
+
+// Ảnh GIF hiện trong dialog "bẫy nhạc" — icon 1 lần duy nhất, bấm vào tự
+// phát nhạc nền + cho heo ăn 30k (nếu lỗi/mất mạng thì app tự hiện icon 🎶
+// thay thế).
+export const MUSIC_TRAP_GIF =
+  "https://media1.tenor.com/m/cF4XC0Afge8AAAAd/nick-wilde-zootopia-2.gif";
+
 // Báo qua Telegram cho BẠN khi người chơi tìm đủ 3 mảnh ghép + chìa khoá +
 // cổng thần bí trong hộp quà — kèm theo hũ heo đang bao nhiêu tiền và mấy
 // phần quà "hên xui" đã trúng mấy lần. Để trống thì app không gửi gì cả.
@@ -61,13 +71,26 @@ export const COMING_SOON = {
   subtitle: "Hãy chờ đợi nhé 💕",
 };
 
-// 3 con số bí mật ghép lại thành ngày yêu nhau, hiện ra khi tìm thấy icon 🐴🌸❤️ trong hộp quà.
-// Lưu ý: mỗi icon (ngựa/hoa/tim) đều xuất hiện dưới dạng 3 icon giống hệt nhau,
-// chỉ 1 con thật sự giữ con số — đoán sai có thể khiến nó nhân bản thêm.
+// 3 mảnh ghép bí mật, hiện ra khi tìm thấy icon 🐴🌸❤️ trong hộp quà — đánh số
+// thứ tự 1/2/3 (ngựa/hoa/tim) để người chơi biết cách ghép đúng thứ tự dù tìm
+// thấy không theo thứ tự đó.
+// Lưu ý: mỗi icon (ngựa/hoa/tim) đều xuất hiện dưới dạng nhiều icon giống hệt
+// nhau, chỉ 1 con thật sự giữ mảnh ghép — đoán sai có thể khiến nó nhân bản thêm.
+//
+// - horse (mảnh ghép số 1): KHÔNG hiện số cho người chơi thấy, chỉ hiện câu
+//   đố `question`; đáp án đúng luôn cố định là `answer` (giữ bí mật).
+// - flower (mảnh ghép số 2) và heart (mảnh ghép thần bí số 3): mỗi lần người
+//   chơi bấm vào mảnh ghép THẬT (kể cả bấm lại nhiều lần) đều ngẫu nhiên lại
+//   50/50 ra 1 trong 2 số bên dưới — số ở LẦN BẤM GẦN NHẤT mới là số dùng làm
+//   mật khẩu (xem icon ☁️ trong bảng nhiệm vụ để xem lại số gần nhất).
 export const DATE_PIECES = {
-  horse: "26",
-  flower: "18",
-  heart: "04",
+  horse: {
+    question:
+      "Khi chị 6 tuổi, em mới bằng một nửa tuổi của chị. Vậy đến khi chị 21 tuổi, em sẽ bao nhiêu tuổi?",
+    answer: "18",
+  },
+  flower: ["10", "04"],
+  heart: ["26", "95"],
 };
 
 // Những lời nhắn nhỏ hiện ra khi bấm các icon còn lại (🐶🦋🍀🌙) trong hộp quà.
