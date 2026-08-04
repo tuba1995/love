@@ -25,6 +25,11 @@ const SPARKLES = [
 
 const BURST_RAYS = Array.from({ length: 12 }, (_, i) => i * 30);
 
+// Thời gian sống (giây) của item cổng thần bí thật sau khi kích hoạt thành
+// công — hết chừng này giây mà chưa bấm trúng thì cổng biến mất, phải tìm
+// lại con hamster để thử vận may lần nữa.
+const GATE_WINDOW_SECONDS = 25;
+
 // Con hamster mang chức năng "cổng thần bí" — cứ mỗi 20 giây sẽ đổi sang icon
 // tiếp theo trong danh sách này (hết vòng thì quay lại từ đầu), để người
 // chơi không thể học thuộc icon mà đoán trước.
@@ -103,7 +108,7 @@ const ICONS = [
   // bẫy nhạc — xem MUSIC_TRAP_EMOJI_SET, chỉ dùng được 1 lần
   { id: "music-trap", emoji: "🎷", action: "music-trap" },
   // icon gợi ý riêng, luôn nhắc đúng 1 nội dung cố định: cổng thần bí chỉ
-  // tồn tại 20s sau khi kích hoạt, không hên xui gì cả
+  // tồn tại GATE_WINDOW_SECONDS giây sau khi kích hoạt, không hên xui gì cả
   { id: "gate-tip", emoji: "🕰️", action: "gate-tip" },
   // icon gợi ý riêng khác, luôn nhắc đúng 1 nội dung cố định: nên tập trung
   // tìm hết từng cụm icon một thay vì bấm lung tung khắp màn hình, không
@@ -363,23 +368,50 @@ function makeFakePieceItem(points) {
   };
 }
 
-// Hộp quà bí ẩn 🎲 — 1 vòng quay may rủi mỗi lần bấm, trọng số không cần
-// cộng đúng 100 (chỉ là tỉ lệ tương đối với nhau). "Chìa khoá vàng" tự
-// động bị loại khỏi vòng quay một khi đã tìm được rồi. Số tiền cộng/trừ
-// hũ heo đều random 1.000–50.000đ, không còn cố định.
+// "Chìa khoá vàng", "Cổng thần bí" và "Linh vật may mắn" luôn có cơ hội
+// tuyệt đối riêng của từng cái mỗi lần bấm (4%, 3% và 7%), tách biệt hẳn
+// khỏi hệ trọng số tương đối bên dưới — không phụ thuộc các phần quà khác
+// đang nặng/nhẹ ký thế nào. Một khi key/gate đã tìm được rồi thì phần trăm
+// dành riêng cho nó tự động dồn lại cho vòng quay bình thường — riêng
+// "Linh vật may mắn" không có khái niệm "đã tìm được" nên tỉ lệ 7% luôn cố
+// định mãi mãi, xem pickMysteryBoxOutcome.
+const KEY_CHANCE = 0.04;
+const GATE_CHANCE = 0.03;
+const MASCOT_CHANCE = 0.07;
+
+// Hộp quà bí ẩn 🎲 — 1 vòng quay may rủi mỗi lần bấm (trừ "key"/"gate"/
+// "mascot" ở trên), trọng số không cần cộng đúng 100 (chỉ là tỉ lệ tương
+// đối với nhau). Số tiền cộng/trừ hũ heo đều random 1.000–50.000đ, không
+// còn cố định.
 const MYSTERY_BOX_OUTCOMES = [
-  { weight: 25, type: "drink", text: "Bạn được tặng 1 đồ uống tuỳ thích 🥤" },
-  { weight: 20, type: "video", text: "Bạn làm 1 video ca nhạc tặng ny mình nhá 🎬" },
-  { weight: 25, type: "food", text: "Bạn làm một món ăn mà người yêu bạn order 🍳" },
-  { weight: 15, type: "item", text: "Bạn được mua 1 món đồ bạn thích dưới 200k 🛍️" },
+  { weight: 25, type: "drink", text: "Em iu được tặng 1 đồ uống tuỳ thích 🥤" },
+  { weight: 20, type: "video", text: "Em iu làm 1 video ca nhạc tặng ny mình nhá 🎬" },
+  { weight: 25, type: "food", text: "Em iu làm 1 món ăn mà người yêu bạn order 🍳" },
+  { weight: 15, type: "item", text: "Em iu mua 1 món đồ em thích dưới 200k 🛍️" },
   { weight: 25, type: "coffee", text: "Mua cho người yêu 1 cốc cafe muối ☕🧂" },
   { weight: 15, type: "relief" }, // text random, xem handleIconClick
   { weight: 15, type: "feed" }, // text random, xem handleIconClick
   { weight: 50, type: "empty", text: "Không có gì đâu, rỗng tếch 😆" },
-  { weight: 55, type: "empty", text: "Không có gì đâu, rỗng tếch 😅" },
   { weight: 60, type: "empty", text: "Không có gì đâu, rỗng tếch 🤷" },
-  { weight: 10, type: "key", text: "Chìa khoá vàng! ✨" },
+  // weight của key/gate/mascot không dùng tới nữa — tỉ lệ của 3 cái này
+  // giờ cố định (KEY_CHANCE/GATE_CHANCE/MASCOT_CHANCE), tách riêng khỏi
+  // vòng quay trọng số tương đối
+  { type: "key", text: "Chìa khoá vàng! ✨" },
+  // trúng thẳng cổng thần bí luôn, không cần tìm con hamster/chờ cửa sổ 25s
+  { type: "gate", text: "Cổng thần bí đã mở ra ngay tại đây! 🌀" },
+  // chỉ mang tính hên xui/trang trí, không có tác dụng gì cả — dòng đầu là
+  // tiêu đề, xuống dòng hiện bộ icon linh vật (dùng chung whitespace-pre-line
+  // với riêng modal "mystery", xem JSX bên dưới)
+  { type: "mascot", text: "Linh vật may mắn\n🦡  🦁 🦖 🦏 🦃" },
   { weight: 10, type: "bonus" }, // cộng random 1.000–30.000đ, text random xem handleIconClick
+  // chỉ là gợi ý, không có tác dụng gì khác — nhắc người chơi để ý icon con
+  // hamster: bấm vào nó có 50% cơ hội mở cổng thần bí, cổng chỉ tồn tại
+  // đúng 25 giây (GATE_WINDOW_SECONDS) rồi biến mất
+  {
+    weight: 20,
+    type: "tip",
+    text: "Hãy để ý những icon báo hiệu cổng thần bí xuất hiện — bấm vào có 50% cơ hội mở được cổng thần bí, cổng chỉ tồn tại 25s thôi đó, nhanh tay lên nhé!",
+  },
 ];
 // 5 kiểu quà "nhiệm vụ ngoài đời" cần đếm dồn lại để tổng kết/gửi mail
 const MYSTERY_TASK_LABELS = {
@@ -389,15 +421,34 @@ const MYSTERY_TASK_LABELS = {
   item: "Được mua 1 món đồ thích <200k",
   coffee: "Mua cho người yêu 1 cốc cafe muối",
 };
-function pickMysteryBoxOutcome(keyAlreadyFound) {
+function pickMysteryBoxOutcome(keyAlreadyFound, gateAlreadyFound) {
+  // 1 lần roll duy nhất trong [0, 1) — cắt sẵn lát KEY_CHANCE, GATE_CHANCE
+  // rồi MASCOT_CHANCE đầu tiên (2 cái đầu chỉ tính nếu chưa tìm được, cái
+  // "mascot" thì luôn tính vì không có khái niệm "đã tìm được"), phần còn
+  // lại mới scale về đúng khoảng [0, tổng trọng số) để chia cho vòng quay
+  // tương đối bên dưới, đảm bảo 3 cái này luôn đúng % tuyệt đối riêng của
+  // từng cái, không bị các phần quà khác pha loãng.
+  const roll = Math.random();
+  let boundary = 0;
+  if (!keyAlreadyFound) {
+    boundary += KEY_CHANCE;
+    if (roll < boundary) return MYSTERY_BOX_OUTCOMES.find((o) => o.type === "key");
+  }
+  if (!gateAlreadyFound) {
+    boundary += GATE_CHANCE;
+    if (roll < boundary) return MYSTERY_BOX_OUTCOMES.find((o) => o.type === "gate");
+  }
+  boundary += MASCOT_CHANCE;
+  if (roll < boundary) return MYSTERY_BOX_OUTCOMES.find((o) => o.type === "mascot");
+
   const pool = MYSTERY_BOX_OUTCOMES.filter(
-    (o) => o.type !== "key" || !keyAlreadyFound,
+    (o) => o.type !== "key" && o.type !== "gate" && o.type !== "mascot",
   );
   const total = pool.reduce((sum, o) => sum + o.weight, 0);
-  let roll = Math.random() * total;
+  let roll2 = ((roll - boundary) / (1 - boundary)) * total;
   for (const o of pool) {
-    if (roll < o.weight) return o;
-    roll -= o.weight;
+    if (roll2 < o.weight) return o;
+    roll2 -= o.weight;
   }
   return pool[pool.length - 1];
 }
@@ -684,13 +735,25 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
   // con hamster cổng thần bí KHÔNG xuất hiện ngay — đợi đúng 1 phút sau khi mở
   // hộp quà mới loé ra (icon random trong GATE_EMOJI_SET, vẫn tự đổi lốt mỗi
   // 20s như cũ). Bấm vào nó chỉ có 50% kích hoạt được cổng thần bí thật —
-  // trúng thì 1 item riêng xuất hiện đâu đó trên màn hình trong 20s, bấm
-  // trúng NÓ mới thực sự tính là tìm thấy cổng thần bí.
+  // trúng thì 1 item riêng xuất hiện đâu đó trên màn hình trong GATE_WINDOW_SECONDS
+  // giây, bấm trúng NÓ mới thực sự tính là tìm thấy cổng thần bí.
   const [gateIconVisible, setGateIconVisible] = useState(false);
   const [gateWindowActive, setGateWindowActive] = useState(false);
   const [gateWindowItem, setGateWindowItem] = useState(null);
+  // đồng hồ đếm ngược xinh xinh hiển thị lúc cổng đang mở, tính bằng giây —
+  // gateWindowTimeoutRef mới là cái thực sự đóng cổng sau đúng
+  // GATE_WINDOW_SECONDS giây, độc lập với việc UI có re-render đúng nhịp
+  // giây hay không (giống cơ chế đồng hồ bom nhân bản)
+  const [gateWindowRemaining, setGateWindowRemaining] = useState(0);
   const gateWindowTimeoutRef = useRef(null);
-  useEffect(() => () => clearTimeout(gateWindowTimeoutRef.current), []);
+  const gateWindowIntervalRef = useRef(null);
+  useEffect(
+    () => () => {
+      clearTimeout(gateWindowTimeoutRef.current);
+      clearInterval(gateWindowIntervalRef.current);
+    },
+    [],
+  );
   // trật 50% thì con hamster biến mất luôn, không đứng yên cho bấm liên tục —
   // sau đúng 10s mới loé lại, đổi sang 1 icon khác trong GATE_EMOJI_SET
   const gateCooldownTimeoutRef = useRef(null);
@@ -990,7 +1053,7 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
         setModal({
           type: "fun-text",
           emoji: GATE_EMOJI_SET[gateIconIndex],
-          text: "Cổng thần bí đã mở rồi, không cần tìm nữa đâu 😄",
+          text: "Cổng thần bí cũng có thể xuất hiện ở icon xúc xắc, thử vận may nhá 😄",
         });
         return;
       }
@@ -1008,19 +1071,24 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
       }
       // kích hoạt thành công — con hamster cũng biến mất 5s (né bấm liên tục
       // tạo chồng nhiều cổng cùng lúc), sinh 1 item riêng trôi dạt trên màn
-      // hình giống hệt các icon khác (không nổi bật), chỉ tồn tại 20s, bấm
-      // trúng NÓ mới thực sự tính là tìm thấy cổng
+      // hình giống hệt các icon khác (không nổi bật), chỉ tồn tại
+      // GATE_WINDOW_SECONDS giây, bấm trúng NÓ mới thực sự tính là tìm thấy cổng
       hideGateIconFor(5000);
       setGateWindowItem(makeGateWindowItem());
       setGateWindowActive(true);
+      setGateWindowRemaining(GATE_WINDOW_SECONDS);
+      clearInterval(gateWindowIntervalRef.current);
+      gateWindowIntervalRef.current = setInterval(() => {
+        setGateWindowRemaining((s) => Math.max(0, s - 1));
+      }, 1000);
       clearTimeout(gateWindowTimeoutRef.current);
-      gateWindowTimeoutRef.current = setTimeout(
-        () => setGateWindowActive(false),
-        20000,
-      );
+      gateWindowTimeoutRef.current = setTimeout(() => {
+        setGateWindowActive(false);
+        clearInterval(gateWindowIntervalRef.current);
+      }, GATE_WINDOW_SECONDS * 1000);
       setModal({
         type: "gate-hint",
-        text: "Cổng thần bí đã xuất hiện, chỉ tồn tại 20s thôi, nhanh tay tìm nó nhé!",
+        text: `Cổng thần bí đã xuất hiện, chỉ tồn tại ${GATE_WINDOW_SECONDS}s thôi, nhanh tay tìm nó nhé!`,
       });
       return;
     }
@@ -1044,10 +1112,12 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
       return;
     }
     if (icon.action === "mystery") {
-      const outcome = pickMysteryBoxOutcome(keyFound);
+      const outcome = pickMysteryBoxOutcome(keyFound, gateFound);
       let text = outcome.text;
       if (outcome.type === "key") {
         setKeyFound(true);
+      } else if (outcome.type === "gate") {
+        setGateFound(true);
       } else if (outcome.type === "relief") {
         const amount = randomAmount(1000, 50000);
         setPiggyMoney((m) => m - amount);
@@ -1093,7 +1163,7 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
     if (icon.action === "gate-tip") {
       setModal({
         type: "hint",
-        text: "Cổng thần bí chỉ tồn tại 20s, nhanh tay tìm được nó nhé!",
+        text: `Cổng thần bí chỉ tồn tại ${GATE_WINDOW_SECONDS}s, nhanh tay tìm được nó nhé!`,
       });
       return;
     }
@@ -1365,11 +1435,12 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
   };
 
   // item tạm thời do "navigate" (con hamster cổng thần bí) kích hoạt ra — bấm
-  // trúng nó trong đúng 20s mới thực sự tính là tìm thấy cổng
+  // trúng nó trong đúng GATE_WINDOW_SECONDS giây mới thực sự tính là tìm thấy cổng
   const handleGateWindowClick = () => {
     if (celebrating) return;
     setGateFound(true);
     clearTimeout(gateWindowTimeoutRef.current);
+    clearInterval(gateWindowIntervalRef.current);
     setGateWindowActive(false);
     setModal({ type: "gate-found" });
   };
@@ -1634,6 +1705,32 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
         )}
       </AnimatePresence>
 
+      {/* đồng hồ đếm ngược xinh xinh của cổng thần bí — hiện ở góc trái
+          trên trong lúc item cổng thật đang trôi dạt trên màn hình, để
+          người chơi biết còn bao nhiêu giây trước khi nó biến mất */}
+      <AnimatePresence>
+        {gateWindowActive && (
+          <motion.div
+            className="fixed top-3 left-3 z-40 flex items-center gap-2 rounded-2xl bg-linear-to-r from-fuchsia-500/90 to-rose-400/90 backdrop-blur-sm px-4 py-2 shadow-lg border border-white/50"
+            initial={{ opacity: 0, y: -16, scale: 0.8 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -16, scale: 0.8 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          >
+            <motion.span
+              className="text-2xl"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1.4, repeat: Infinity, ease: "linear" }}
+            >
+              🌀
+            </motion.span>
+            <span className="text-white font-bold text-xl tabular-nums tracking-wider">
+              {gateWindowRemaining}s
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {musicPlaying && (
         <iframe
           key="bg-music"
@@ -1726,7 +1823,7 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
           );
         })}
 
-      {/* item cổng thần bí tạm thời — chỉ tồn tại 20s, trôi dạt và random
+      {/* item cổng thần bí tạm thời — chỉ tồn tại GATE_WINDOW_SECONDS giây, trôi dạt và random
           toạ độ y hệt icon thường (xem makeGateWindowItem), cố tình không
           làm nổi bật để hoà lẫn vào đám icon còn lại trên màn hình */}
       {opened && gateWindowActive && gateWindowItem && (
@@ -2315,7 +2412,7 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
                     Mỗi lần mở sẽ ngẫu nhiên trúng 1 trong rất nhiều phần quà
                     hấp dẫn 🎊
                   </p>
-                  <p className="text-slate-700 text-lg font-medium leading-relaxed">
+                  <p className="text-slate-700 text-lg font-medium leading-relaxed whitespace-pre-line">
                     {modal.text}
                   </p>
                 </div>

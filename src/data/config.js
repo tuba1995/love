@@ -106,9 +106,9 @@ export const LOVE_NOTES = [
   "Cảm ơn vì đã xuất hiện và làm cuộc sống của anh rực rỡ hơn mỗi ngày 💌",
   "Dù có bao nhiêu chuyện xảy ra, được nắm tay em vẫn luôn là điều làm anh hạnh phúc nhất.",
   "Yêu cả những lúc em cười khờ khạo lẫn những lúc càu nhàu vô lý 🥰",
-  "Cảm ơn vì đã kiên nhẫn với anhsuốt thời gian qua, mình cùng cố gắng nhiều hơn nữa nhé.",
-  "Mỗi ngày bên em đều là một kỷ niệm mà anhmuốn giữ mãi.",
-  "Không cần điều gì to tát, chỉ cần có em ở đây là đủ làm anh/em hạnh phúc rồi.",
+  "Cảm ơn vì đã kiên nhẫn với anhs uốt thời gian qua, mình cùng cố gắng nhiều hơn nữa nhé.",
+  "Mỗi ngày bên em đều là một kỷ niệm mà anh muốn giữ mãi.",
+  "Không cần điều gì to tát, chỉ cần có em ở đây là đủ làm anh hạnh phúc rồi.",
   "Cảm ơn vì đã chọn anh, và anh cũng sẽ luôn chọn emm, ở mọi phiên bản của cuộc đời này 💍",
 ];
 
@@ -177,3 +177,33 @@ export const MEMORIES = [
     emoji: "💍",
   },
 ];
+
+
+// Hộp bẫy nguy hiểm — cứ mỗi 20 giây tự đổi sang icon tiếp theo trong danh
+// sách này. Bấm vào là mất chìa khoá đã tìm được (về lại 0/1) và con rắn
+// giữ chìa khoá cũng đổi sang hình dạng khác luôn, xem action "danger".
+const DANGER_EMOJI_SET = ["🚨", "☠️", "🕷️"];
+
+// Bẫy nhạc — cứ mỗi 25 giây tự đổi sang icon tiếp theo trong danh sách này.
+// Chỉ dùng được ĐÚNG 1 LẦN: bấm vào là tự phát nhạc nền + cho heo ăn 30k
+// luôn, không hỏi han gì cả, rồi biến mất vĩnh viễn khỏi màn hình.
+const MUSIC_TRAP_EMOJI_SET = ["🎷", "🎺", "🦉"];
+
+// Bom nhân bản hẹn giờ — cứ mỗi 15 giây tự đổi sang icon tiếp theo (KHI
+// CHƯA kích hoạt đếm ngược, ẩn đi luôn khi đang đếm ngược). Bấm vào bắt đầu
+// đếm ngược 1 phút — hết giờ mà chưa gỡ được thì mọi item hiện có trên màn
+// hình sẽ nhân đôi số lượng, xem triggerBombExplode. Không dùng 💣 trong bộ
+// này nữa để không bị nhầm với quả bom thật (id "bomb") ở dưới.
+const BOMB_CLONE_EMOJI_SET = ["🧨", "⏰", "🌪️", "🎆", "🌋"];
+
+// Dụng cụ gỡ bom — chỉ xuất hiện trong lúc bom đang đếm ngược. Bấm vào 50/50
+// gỡ được hay không, dù kết quả gì cũng biến mất tạm 3s rồi loé lại bằng 1
+// icon khác trong bộ này.
+const DEFUSE_EMOJI_SET = ["❤️", "🔨", "🗜️", "🚒", "🔩"];
+const CREATURE_DISGUISE_SETS = {
+  horse: ["🐮", "🦏", "🐗", "🦌", "🐐"],
+  flower: ["🌼", "🦃", "🐫", "💐", "🌾"],
+  heart: ["🧡", "🦁", "🐶", "🐓", "🐉"],
+  snake: ["🐣", "🐊", "🦖"], // chìa khóa
+};
+const GATE_EMOJI_SET = ["🐹", "🦝", "🦡", "🐿️", "🐌"];
