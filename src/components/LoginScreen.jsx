@@ -3,9 +3,35 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Lock, CheckCircle2 } from 'lucide-react';
 import Keypad from './Keypad';
 import FloatingHearts from './FloatingHearts';
-import { SITE } from '../data/config';
+import { SITE, TELEGRAM } from '../data/config';
 
 const MAX_ATTEMPTS = 3;
+
+// Báo qua Telegram mỗi lần người chơi nhập đủ số ký tự ở màn Login (dù đúng
+// hay sai) — im lặng bỏ qua nếu chưa cấu hình TELEGRAM.botToken/chatId trong
+// config.js, hoặc nếu lỗi mạng, giống hệt cơ chế log ở GiftScreen.jsx.
+async function sendTelegramLoginLog({ attemptNumber, entered, success }) {
+  if (!TELEGRAM.botToken || !TELEGRAM.chatId) return;
+  const lines = [
+    success
+      ? '✅ Nhập đúng mật khẩu màn Login!'
+      : `❌ Nhập sai mật khẩu màn Login (lần ${attemptNumber}/${MAX_ATTEMPTS})`,
+    `Mã đã nhập: ${entered}`,
+    `Thời gian: ${new Date().toLocaleString('vi-VN')}`,
+  ];
+  try {
+    await fetch(
+      `https://api.telegram.org/bot${TELEGRAM.botToken}/sendMessage`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: TELEGRAM.chatId, text: lines.join('\n') }),
+      },
+    );
+  } catch {
+    // mất mạng hay Telegram lỗi cũng kệ, không ảnh hưởng trải nghiệm người chơi
+  }
+}
 
 // Cảnh báo "hài hài có kẻ gian đột nhập" — tăng dần độ khẩn cấp qua từng lần
 // nhập sai, lần thứ 3 (cuối) sẽ xoá sạch tiến trình và quay lại hộp quà.
@@ -40,12 +66,14 @@ export default function LoginScreen({ target, onSuccess, onLockout }) {
 
   const check = (next) => {
     if (next.length < passcode.length) return;
+    const attemptIndex = attempts;
     if (next === passcode) {
+      sendTelegramLoginLog({ attemptNumber: attemptIndex + 1, entered: next, success: true });
       setSuccess(true);
       setTimeout(() => onSuccess?.(), 1600);
       return;
     }
-    const attemptIndex = attempts;
+    sendTelegramLoginLog({ attemptNumber: attemptIndex + 1, entered: next, success: false });
     setAttempts(attemptIndex + 1);
     setError(true);
     setTimeout(() => {

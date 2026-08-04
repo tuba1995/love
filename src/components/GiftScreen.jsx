@@ -385,10 +385,26 @@ const MASCOT_CHANCE = 0.07;
 // còn cố định.
 const MYSTERY_BOX_OUTCOMES = [
   { weight: 25, type: "drink", text: "Em iu được tặng 1 đồ uống tuỳ thích 🥤" },
-  { weight: 20, type: "video", text: "Em iu làm 1 video ca nhạc tặng ny mình nhá 🎬" },
-  { weight: 25, type: "food", text: "Em iu làm 1 món ăn mà người yêu bạn order 🍳" },
-  { weight: 15, type: "item", text: "Em iu mua 1 món đồ em thích dưới 200k 🛍️" },
-  { weight: 25, type: "coffee", text: "Mua cho người yêu 1 cốc cafe muối ☕🧂" },
+  {
+    weight: 20,
+    type: "video",
+    text: "Em iu làm 1 video ca nhạc tặng ny mình nhá 🎬",
+  },
+  {
+    weight: 25,
+    type: "food",
+    text: "Em iu làm 1 món ăn mà người yêu bạn order 🍳",
+  },
+  {
+    weight: 15,
+    type: "item",
+    text: "Em iu mua 1 món đồ em thích dưới 200k 🛍️",
+  },
+  {
+    weight: 25,
+    type: "coffee",
+    text: "Mua cho người yêu 1 cốc cafe muối ☕🧂",
+  },
   { weight: 15, type: "relief" }, // text random, xem handleIconClick
   { weight: 15, type: "feed" }, // text random, xem handleIconClick
   { weight: 50, type: "empty", text: "Không có gì đâu, rỗng tếch 😆" },
@@ -432,14 +448,17 @@ function pickMysteryBoxOutcome(keyAlreadyFound, gateAlreadyFound) {
   let boundary = 0;
   if (!keyAlreadyFound) {
     boundary += KEY_CHANCE;
-    if (roll < boundary) return MYSTERY_BOX_OUTCOMES.find((o) => o.type === "key");
+    if (roll < boundary)
+      return MYSTERY_BOX_OUTCOMES.find((o) => o.type === "key");
   }
   if (!gateAlreadyFound) {
     boundary += GATE_CHANCE;
-    if (roll < boundary) return MYSTERY_BOX_OUTCOMES.find((o) => o.type === "gate");
+    if (roll < boundary)
+      return MYSTERY_BOX_OUTCOMES.find((o) => o.type === "gate");
   }
   boundary += MASCOT_CHANCE;
-  if (roll < boundary) return MYSTERY_BOX_OUTCOMES.find((o) => o.type === "mascot");
+  if (roll < boundary)
+    return MYSTERY_BOX_OUTCOMES.find((o) => o.type === "mascot");
 
   const pool = MYSTERY_BOX_OUTCOMES.filter(
     (o) => o.type !== "key" && o.type !== "gate" && o.type !== "mascot",
@@ -453,6 +472,28 @@ function pickMysteryBoxOutcome(keyAlreadyFound, gateAlreadyFound) {
   return pool[pool.length - 1];
 }
 
+// định dạng mm:ss (hoặc h:mm:ss nếu vượt quá 1 giờ) cho đồng hồ hiện trên
+// màn hình
+function formatClock(totalSeconds) {
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  const mm = String(m).padStart(2, "0");
+  const ss = String(s).padStart(2, "0");
+  return h > 0 ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+}
+// định dạng "X phút Y giây" bằng tiếng Việt cho dòng thời gian gửi qua Telegram
+function formatDurationVi(totalSeconds) {
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+  const parts = [];
+  if (h > 0) parts.push(`${h} giờ`);
+  if (h > 0 || m > 0) parts.push(`${m} phút`);
+  parts.push(`${s} giây`);
+  return parts.join(" ");
+}
+
 // Báo qua Telegram ngay khi người chơi hoàn thành cả 3 nhiệm vụ (mảnh
 // ghép + chìa khoá + cổng thần bí) — im lặng bỏ qua nếu chưa cấu hình
 // TELEGRAM.botToken/chatId trong config.js, hoặc nếu lỗi mạng.
@@ -462,10 +503,12 @@ async function sendTelegramSummary({
   flowerValue,
   heartValue,
   password,
+  durationSeconds,
 }) {
   if (!TELEGRAM.botToken || !TELEGRAM.chatId) return;
   const lines = [
     "🎉 Người chơi vừa hoàn thành hết nhiệm vụ trong hộp quà!",
+    `⏱️ Thời gian hoàn thành: ${formatDurationVi(durationSeconds)}`,
     `🐷 Hũ heo: ${piggyMoney.toLocaleString("vi-VN")}đ`,
     `${PIECE_LABELS.flower}: ${flowerValue ?? "Chưa tìm thấy"}`,
     `${PIECE_LABELS.heart}: ${heartValue ?? "Chưa tìm thấy"}`,
@@ -480,7 +523,10 @@ async function sendTelegramSummary({
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: TELEGRAM.chatId, text: lines.join("\n") }),
+        body: JSON.stringify({
+          chat_id: TELEGRAM.chatId,
+          text: lines.join("\n"),
+        }),
       },
     );
   } catch {
@@ -691,6 +737,21 @@ function CuteAnimatedScene({ emoji }) {
 }
 
 export default function GiftScreen({ onOpen, onQuestComplete }) {
+  // Đồng hồ tính giờ — bắt đầu tính ngay từ lúc người chơi vào màn này, dừng
+  // hẳn (chốt số giây, xem finalElapsedSeconds) đúng lúc hoàn thành đủ 3
+  // nhiệm vụ, để biết người chơi mất bao lâu mới tìm hết mảnh ghép + chìa
+  // khoá + cổng thần bí, gửi kèm qua Telegram lúc "Đi tiếp".
+  const startTimeRef = useRef(Date.now());
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [finalElapsedSeconds, setFinalElapsedSeconds] = useState(null);
+  useEffect(() => {
+    if (finalElapsedSeconds !== null) return;
+    const intervalId = setInterval(() => {
+      setElapsedSeconds(Math.floor((Date.now() - startTimeRef.current) / 1000));
+    }, 1000);
+    return () => clearInterval(intervalId);
+  }, [finalElapsedSeconds]);
+
   const [opened, setOpened] = useState(false);
   const [gifError, setGifError] = useState(false);
   const [modal, setModal] = useState(null); // { type: loại modal đang mở, ... }
@@ -702,8 +763,7 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
   const [musicPurchased, setMusicPurchased] = useState(false);
   // true khi nhạc nền YouTube bị tạm dừng để nhường chỗ cho dialog 💖,
   // để biết lúc đóng dialog đó có cần bật nhạc nền chạy tiếp không
-  const [resumeYoutubeAfterModal, setResumeYoutubeAfterModal] =
-    useState(false);
+  const [resumeYoutubeAfterModal, setResumeYoutubeAfterModal] = useState(false);
   const [brokenPiggyGifs, setBrokenPiggyGifs] = useState(() => new Set());
   const [collected, setCollected] = useState(() => new Set());
   // flower/heart: mỗi lần bấm vào mảnh ghép THẬT sẽ random lại giữa các số
@@ -849,7 +909,10 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
   // bên dưới
   const heartTargets = celebrating
     ? heartPoints(
-        ICONS.length + guesses.length + piggyItems.length + fakePieceItems.length,
+        ICONS.length +
+          guesses.length +
+          piggyItems.length +
+          fakePieceItems.length,
       )
     : null;
 
@@ -868,9 +931,7 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
   useEffect(() => {
     if (!opened) return;
     const intervalId = setInterval(() => {
-      setSnakeIconIndex(
-        (i) => (i + 1) % CREATURE_DISGUISE_SETS.snake.length,
-      );
+      setSnakeIconIndex((i) => (i + 1) % CREATURE_DISGUISE_SETS.snake.length);
     }, 20000);
     return () => clearInterval(intervalId);
   }, [opened]);
@@ -950,6 +1011,11 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
   // tắt dialog "tìm thấy..." của thứ cuối cùng — không tự bắn ngầm ngay
   // lúc điều kiện vừa đủ trong khi dialog đó còn đang mở.
   const startCelebration = () => {
+    // chốt số giây NGAY tại thời điểm hoàn thành đủ 3 nhiệm vụ — không tính
+    // thêm thời gian xem pháo hoa/dialog chúc mừng sau đó
+    setFinalElapsedSeconds(
+      Math.floor((Date.now() - startTimeRef.current) / 1000),
+    );
     setQuestNotified(true);
     setCelebrating(true);
     setTimeout(() => {
@@ -979,6 +1045,7 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
       flowerValue,
       heartValue,
       password,
+      durationSeconds: finalElapsedSeconds ?? elapsedSeconds,
     });
     setModal(null);
     onQuestComplete?.(password);
@@ -1041,7 +1108,10 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
   const hideSnakeFor = (ms) => {
     setSnakeVisible(false);
     clearTimeout(snakeCooldownTimeoutRef.current);
-    snakeCooldownTimeoutRef.current = setTimeout(() => setSnakeVisible(true), ms);
+    snakeCooldownTimeoutRef.current = setTimeout(
+      () => setSnakeVisible(true),
+      ms,
+    );
   };
 
   const handleIconClick = (icon) => {
@@ -1405,7 +1475,11 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
         // mảnh ghép/chìa khoá mà đã có rồi thì coi như cho heo ăn luôn,
         // để bấm lần nào cũng có tác dụng
         const wonSomething = Math.random() < 0.5;
-        if (wonSomething && group.type === "piece" && !collected.has(rewardKey)) {
+        if (
+          wonSomething &&
+          group.type === "piece" &&
+          !collected.has(rewardKey)
+        ) {
           const next = new Set(collected);
           next.add(rewardKey);
           setCollected(next);
@@ -1478,12 +1552,18 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
     setPiggyItems((prev) => {
       const room = Math.max(0, MAX_PIGGY_ITEMS - prev.length);
       const toAdd = Math.min(prev.length, room);
-      return [...prev, ...Array.from({ length: toAdd }, () => makePiggyItem([]))];
+      return [
+        ...prev,
+        ...Array.from({ length: toAdd }, () => makePiggyItem([])),
+      ];
     });
     setFakePieceItems((prev) => {
       const room = Math.max(0, MAX_FAKE_PIECE_ITEMS - prev.length);
       const toAdd = Math.min(prev.length, room);
-      return [...prev, ...Array.from({ length: toAdd }, () => makeFakePieceItem([]))];
+      return [
+        ...prev,
+        ...Array.from({ length: toAdd }, () => makeFakePieceItem([])),
+      ];
     });
     burstBombExplosion();
     setBombShaking(true);
@@ -1549,7 +1629,8 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
   const closeModal = () => {
     const wasMusicModal = modal?.type === "music";
     const wasBombMemory = modal?.type === "bomb" && modal.outcome === "memory";
-    const wasBombExplode = modal?.type === "bomb" && modal.outcome === "explode";
+    const wasBombExplode =
+      modal?.type === "bomb" && modal.outcome === "explode";
     setModal(null);
     // đóng dialog nhạc 💖 rồi thì cho nhạc nền YouTube (nếu đang tạm dừng
     // vì dialog này) chạy tiếp
@@ -1627,6 +1708,15 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
 
           <span className="w-px h-8 bg-rose-200 shrink-0" />
 
+          <span
+            title="Thời gian bắt đầu"
+            className="font-semibold tabular-nums shrink-0"
+          >
+            🕒 {formatClock(finalElapsedSeconds ?? elapsedSeconds)}
+          </span>
+
+          <span className="w-px h-8 bg-rose-200 shrink-0" />
+
           <div className="flex items-center gap-3">
             <span title="Mảnh ghép thần bí">🧩 {collected.size}/3</span>
             <span title="Chìa khoá">🗝️ {keyFound ? 1 : 0}/1</span>
@@ -1693,7 +1783,11 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
             <motion.span
               className="text-2xl"
               animate={{ scale: [1, 1.3, 1], rotate: [0, -8, 8, 0] }}
-              transition={{ duration: 0.8, repeat: Infinity, ease: "easeInOut" }}
+              transition={{
+                duration: 0.8,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
             >
               💣
             </motion.span>
@@ -1910,7 +2004,9 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
                 >
                   {getGroupEmoji(
                     guess.group,
-                    guess.group === "snake" ? snakeIconIndex : creatureIconIndex,
+                    guess.group === "snake"
+                      ? snakeIconIndex
+                      : creatureIconIndex,
                   )}
                 </motion.button>
               </motion.div>
@@ -2252,7 +2348,7 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
                     </p>
                   ) : (
                     <p className="text-sm text-slate-600 leading-relaxed">
-                      Bạn đã tìm đủ 3 mảnh ghép rồi!  💕
+                      Bạn đã tìm đủ 3 mảnh ghép rồi! 💕
                     </p>
                   )}
                 </div>
@@ -2298,8 +2394,8 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
                     Tìm thấy chìa khoá
                   </p>
                   <p className="text-slate-700 leading-relaxed">
-                    Bạn vừa nhặt được một chiếc chìa khoá bí ẩn. Không biết
-                    nó mở được gì nhỉ...
+                    Bạn vừa nhặt được một chiếc chìa khoá bí ẩn. Không biết nó
+                    mở được gì nhỉ...
                   </p>
                 </div>
               )}
@@ -2344,8 +2440,8 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
                     Xui rồi
                   </p>
                   <p className="text-slate-700 text-lg font-medium leading-relaxed">
-                    Bạn vừa cho heo ăn mất {modal.amount.toLocaleString("vi-VN")}
-                    đ rồi 😅
+                    Bạn vừa cho heo ăn mất{" "}
+                    {modal.amount.toLocaleString("vi-VN")}đ rồi 😅
                   </p>
                 </div>
               )}
@@ -2370,8 +2466,8 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
                     Xui rồi
                   </p>
                   <p className="text-slate-700 text-lg font-medium leading-relaxed">
-                    Bạn vừa cho heo ăn mất {modal.amount.toLocaleString("vi-VN")}
-                    đ rồi 😅
+                    Bạn vừa cho heo ăn mất{" "}
+                    {modal.amount.toLocaleString("vi-VN")}đ rồi 😅
                   </p>
                 </div>
               )}
@@ -2538,8 +2634,8 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
                     Nghe nhạc nha?
                   </p>
                   <p className="text-slate-700 text-lg font-medium leading-relaxed mb-6">
-                    Nghe nhạc 1 chút để thư giãn nhá, mất 1 xíu xíu tiền
-                    thui. hihi
+                    Nghe nhạc 1 chút để thư giãn nhá, mất 1 xíu xíu tiền thui.
+                    hihi
                   </p>
                   <div className="flex items-center justify-center gap-3">
                     <button
