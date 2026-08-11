@@ -55,6 +55,40 @@ export const GATE_GIF = "https://media.giphy.com/media/atLkXCLfT1dza/giphy.gif";
 export const MUSIC_TRAP_GIF =
   "https://media1.tenor.com/m/cF4XC0Afge8AAAAd/nick-wilde-zootopia-2.gif";
 
+// Ảnh GIF cánh cụt chạy, hiện thân cho nhân vật chính trong màn hành trình
+// con đường (RoadJourneyScreen/PenguinFigure) — thay cho hình vẽ SVG cũ.
+export const PENGUIN_RUN_GIF =
+  "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExNnY3c2piNjNtdHduYjhwYXFmYjdxZmc2emwxOTR6ejZmc25rbWFzbCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/ljfGd2E14Ff7uoGEZi/giphy.gif";
+
+// Ảnh GIF hiện trong màn hành trình con đường (RoadJourneyScreen) lúc cánh
+// cụt đang nạp năng lượng ở chặng 2 — đổi theo % đã nạp: dưới 50% hiện GIF
+// "đói" này, từ 50% trở lên đổi sang FEED_HIGH_GIF bên dưới.
+export const FEED_LOW_GIF =
+  "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExMXlzeGs0bXh6enVodWxueXQzMGtxNXd1dGN0d2g5OWtveHBmdmNoYSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/TUmWjN0waMDqB5KWqu/giphy.gif";
+
+// Ảnh GIF hiện khi đã nạp từ 50% năng lượng trở lên, xem FEED_LOW_GIF ở trên.
+export const FEED_HIGH_GIF =
+  "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExdXlyNWN0amFtdm1yc2Rhd3R1MjlyNmEyc2g1dmwzd3h1ZzhvbGxjeiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/xvc8R0LCww4Ar4EWH9/giphy.gif";
+
+// Ảnh GIF hiện trong thẻ chúc mừng khi cánh cụt chạy về tới đích ở màn hành
+// trình con đường (RoadJourneyScreen).
+export const PENGUIN_ARRIVED_GIF =
+  "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExb2Z2eWs2MjVndGVpdzcxZHg0aWxtOG9hMnozYWQ5b2FndHB4eHR4MSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/k8HzeOhBwK2FBEZJph/giphy.gif";
+
+// Ảnh GIF thay cho icon 🏠 đánh dấu điểm xuất phát trên con đường ở
+// RoadJourneyScreen.
+export const ROAD_START_GIF =
+  "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExbmQ5dHVsY3RkcTNkNzBzbGpsNHlmOGMwOTJtZGN4bXdoNW4zMHM1aCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/VbWMhNsm4FlVbn72Fw/giphy.gif";
+
+// Ảnh GIF thay cho icon 🎉 đánh dấu điểm đích trên con đường ở
+// RoadJourneyScreen.
+export const ROAD_FINISH_GIF = "https://media.giphy.com/media/ZZNBRy31kdbIKyit3N/giphy.gif";
+
+// Ảnh GIF thay cho icon 🍽️ đánh dấu quán ăn (điểm nạp năng lượng ở chặng 2)
+// trên con đường ở RoadJourneyScreen.
+export const ROAD_RESTAURANT_GIF =
+  "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExZmYyajFnbDdkM2VlZWFhcXQ2NjZ5bjVncGZldjBmN2wwNXc5b2lvZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/N0AwQeMf2FteWn9aHK/giphy.gif";
+
 // Báo qua Telegram cho BẠN khi người chơi tìm đủ 3 mảnh ghép + chìa khoá +
 // cổng thần bí trong hộp quà — kèm theo hũ heo đang bao nhiêu tiền và mấy
 // phần quà "hên xui" đã trúng mấy lần. Để trống thì app không gửi gì cả.

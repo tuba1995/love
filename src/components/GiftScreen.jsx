@@ -736,7 +736,7 @@ function CuteAnimatedScene({ emoji }) {
   );
 }
 
-export default function GiftScreen({ onOpen, onQuestComplete }) {
+export default function GiftScreen({ onOpen, onQuestComplete, onSkipToStaircase }) {
   // Đồng hồ tính giờ — bắt đầu tính ngay từ lúc người chơi vào màn này, dừng
   // hẳn (chốt số giây, xem finalElapsedSeconds) đúng lúc hoàn thành đủ 3
   // nhiệm vụ, để biết người chơi mất bao lâu mới tìm hết mảnh ghép + chìa
@@ -1671,6 +1671,18 @@ export default function GiftScreen({ onOpen, onQuestComplete }) {
       exit={{ opacity: 0, scale: 1.05 }}
       transition={{ duration: 0.6 }}
     >
+      {/* Nút bỏ qua toàn bộ nhiệm vụ tìm mảnh ghép + màn Login, đi thẳng
+          sang trang 3 (StaircaseJourney) — chỉ dùng để test/preview nhanh */}
+      {onSkipToStaircase && (
+        <button
+          type="button"
+          onClick={onSkipToStaircase}
+          className="fixed top-3 left-3 z-50 rounded-full bg-white/10 hover:bg-white/20 text-white/70 text-xs px-3 py-1.5 backdrop-blur-sm border border-white/20 transition-colors"
+        >
+          Bỏ qua → Trang 3
+        </button>
+      )}
+
       {/* ánh sáng mờ ảo nền */}
       <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-130 h-130 rounded-full bg-rose-500/20 blur-3xl" />
       <div className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full bg-fuchsia-500/20 blur-3xl" />

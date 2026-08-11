@@ -9,6 +9,16 @@ import { MEMORIES, SITE } from '../data/config';
 
 const STEP_COUNT = MEMORIES.length;
 
+function CoupleHoldingHands({ className = '', figureClassName, expression = 0 }) {
+  return (
+    <div className={`flex items-end ${className}`}>
+      <PersonFigure variant="boy" expression={expression} innerArm="right" className={`${figureClassName} -mr-5 drop-shadow-md`} />
+      <div className="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-[#f2cb9e] border border-black/10 mb-6 sm:mb-7 z-10" />
+      <PersonFigure variant="girl" expression={expression} innerArm="left" className={`${figureClassName} -ml-5 drop-shadow-md`} />
+    </div>
+  );
+}
+
 // A straight flight of steps centered on screen, each one a touch narrower
 // than the last so it reads as real stairs receding upward.
 function buildSteps(count) {
@@ -25,16 +35,6 @@ function buildSteps(count) {
       heightPct,
     };
   });
-}
-
-function CoupleHoldingHands({ className = '', figureClassName }) {
-  return (
-    <div className={`flex items-end ${className}`}>
-      <PersonFigure variant="boy" className={`${figureClassName} -mr-2 drop-shadow-md`} />
-      <div className="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-[#ffdcb8] border border-black/10 mb-6 sm:mb-7 z-10" />
-      <PersonFigure variant="girl" className={`${figureClassName} -ml-2 drop-shadow-md`} />
-    </div>
-  );
 }
 
 function finalBurst() {
@@ -58,6 +58,10 @@ export default function StaircaseJourney() {
   const isLast = step === STEP_COUNT - 1;
   const memory = MEMORIES[step];
   const stepHeightPct = 100 / STEP_COUNT;
+  // 4-stage expression, more cheerful the higher they've climbed — matches
+  // PersonFigure's BROW/mouth/eye stages (0 = focused, 3 = joyful at the top).
+  const progress = STEP_COUNT > 1 ? step / (STEP_COUNT - 1) : 1;
+  const expression = isLast ? 3 : progress < 0.34 ? 0 : progress < 0.67 ? 1 : 2;
 
   const goNext = () => {
     if (step < STEP_COUNT - 1) {
@@ -225,7 +229,7 @@ export default function StaircaseJourney() {
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.4, ease: 'easeOut' }}
                 >
-                  <CoupleHoldingHands figureClassName="w-9 h-16 sm:w-11 sm:h-20" />
+                  <CoupleHoldingHands expression={expression} figureClassName="w-14 h-24 sm:w-16 sm:h-28" />
                 </motion.div>
               </div>
             </div>
@@ -300,7 +304,7 @@ export default function StaircaseJourney() {
               transition={{ duration: 2.2, repeat: Infinity }}
               className="flex items-end justify-center"
             >
-              <CoupleHoldingHands figureClassName="w-14 h-24 sm:w-16 sm:h-28" />
+              <CoupleHoldingHands expression={3} figureClassName="w-20 h-34 sm:w-24 sm:h-40" />
             </motion.div>
 
             <div>
