@@ -5,6 +5,7 @@ import GiftScreen from './components/GiftScreen';
 import LoginScreen from './components/LoginScreen';
 import StaircaseJourney from './components/StaircaseJourney';
 import ComingSoonScreen from './components/ComingSoonScreen';
+import RocketNextButton from './components/RocketNextButton';
 
 const SCREENS = {
   ROAD: 'road',
@@ -31,7 +32,6 @@ function App() {
         {screen === SCREENS.GIFT && (
           <GiftScreen
             key="gift"
-            onOpen={() => setScreen(SCREENS.LOGIN)}
             onQuestComplete={(password) => {
               setLoginTarget(password);
               setScreen(SCREENS.LOGIN);
@@ -52,6 +52,9 @@ function App() {
           <ComingSoonScreen key="coming-soon" />
         )}
       </AnimatePresence>
+      {screen === SCREENS.ROAD && (
+        <RocketNextButton onNext={() => setScreen(SCREENS.GIFT)} />
+      )}
     </div>
   );
 }

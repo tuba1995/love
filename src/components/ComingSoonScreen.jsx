@@ -1,11 +1,14 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import FloatingHearts from './FloatingHearts';
-import { COMING_SOON } from '../data/config';
+import { GALLERY_IMAGE, SITE } from '../data/config';
 
-function getTimeLeft(target) {
-  const diff = Math.max(0, target - Date.now());
+const LOVE_STARTED_AT = new Date(2026, 3, 18, 0, 0, 0).getTime();
+
+function getLoveTime() {
+  const diff = Math.max(0, Date.now() - LOVE_STARTED_AT);
   const totalSeconds = Math.floor(diff / 1000);
+
   return {
     days: Math.floor(totalSeconds / 86400),
     hours: Math.floor((totalSeconds % 86400) / 3600),
@@ -15,115 +18,99 @@ function getTimeLeft(target) {
 }
 
 export default function ComingSoonScreen() {
-  const target = useMemo(() => new Date(COMING_SOON.targetDate).getTime(), []);
-  const [timeLeft, setTimeLeft] = useState(() => getTimeLeft(target));
+  const [loveTime, setLoveTime] = useState(getLoveTime);
 
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      setTimeLeft(getTimeLeft(target));
-    }, 1000);
-    return () => clearInterval(intervalId);
-  }, [target]);
+    const intervalId = window.setInterval(() => setLoveTime(getLoveTime()), 1000);
+    return () => window.clearInterval(intervalId);
+  }, []);
 
   const units = [
-    { label: 'Ngày', value: timeLeft.days },
-    { label: 'Giờ', value: timeLeft.hours },
-    { label: 'Phút', value: timeLeft.minutes },
-    { label: 'Giây', value: timeLeft.seconds },
+    { label: 'Ngày', value: loveTime.days },
+    { label: 'Giờ', value: loveTime.hours },
+    { label: 'Phút', value: loveTime.minutes },
+    { label: 'Giây', value: loveTime.seconds },
   ];
 
   return (
-    <motion.div
-      className="relative w-full min-h-svh flex flex-col items-center justify-center overflow-hidden bg-linear-to-b from-[#2b1330] via-[#3a1240] to-[#1a0f1f] px-4 py-10"
+    <motion.main
+      className="relative flex min-h-svh w-full flex-col items-center justify-center overflow-hidden bg-linear-to-b from-[#fff1f5] via-[#fce7f3] to-[#eadcff] px-4 py-10"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0, scale: 1.05 }}
+      exit={{ opacity: 0, scale: 1.04 }}
       transition={{ duration: 0.6 }}
     >
-      {/* ánh sáng mờ ảo nền, cùng tông với các màn hình khác */}
-      <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-130 h-130 rounded-full bg-rose-500/20 blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full bg-fuchsia-500/20 blur-3xl" />
-      <div className="absolute bottom-0 left-1/4 w-70 h-70 rounded-full bg-amber-400/10 blur-3xl" />
-      <FloatingHearts count={20} />
+      <div className="absolute -top-28 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-rose-300/35 blur-3xl" />
+      <div className="absolute -bottom-20 -left-20 h-80 w-80 rounded-full bg-fuchsia-300/30 blur-3xl" />
+      <div className="absolute bottom-0 right-0 h-72 w-72 rounded-full bg-amber-200/35 blur-3xl" />
+      <FloatingHearts count={18} />
 
-      {/* trái tim đập nhịp + vòng sáng lan toả phía sau */}
-      <div className="relative z-10 mb-6">
-        <motion.div
-          className="absolute inset-0 rounded-full border-2 border-rose-300/50"
-          animate={{ scale: [1, 1.9, 2.6], opacity: [0.6, 0.2, 0] }}
-          transition={{ duration: 2.4, repeat: Infinity, ease: 'easeOut' }}
-        />
-        <motion.div
-          animate={{ scale: [1, 1.15, 1] }}
-          transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
-          className="text-6xl sm:text-7xl relative"
-        >
-          💗
-        </motion.div>
-      </div>
-
-      <motion.p
-        initial={{ opacity: 0, y: -10 }}
+      <motion.section
+        className="relative z-10 flex w-full max-w-xl flex-col items-center text-center"
+        initial={{ opacity: 0, y: 28 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.6 }}
-        className="relative z-10 font-script text-rose-200 text-4xl sm:text-5xl mb-2 text-center px-4"
+        transition={{ duration: 0.7, ease: 'easeOut' }}
       >
-        {COMING_SOON.title}
-      </motion.p>
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.4, duration: 0.6 }}
-        className="relative z-10 text-rose-300/70 text-sm tracking-[0.3em] uppercase mb-10 text-center px-4"
-      >
-        {COMING_SOON.subtitle}
-      </motion.p>
+        <p className="mb-1 text-xs font-semibold uppercase tracking-[0.35em] text-rose-500">
+          Hành trình của chúng mình
+        </p>
+        <h1 className="font-script text-4xl text-fuchsia-900 sm:text-5xl">
+          {SITE.boyName} &amp; {SITE.girlName}
+        </h1>
 
-      <div className="relative z-10 grid grid-cols-4 gap-3 sm:gap-4">
-        {units.map((u, i) => (
-          <motion.div
-            key={u.label}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 + i * 0.1, duration: 0.5 }}
-            className="flex flex-col items-center gap-2 rounded-2xl bg-white/10 backdrop-blur-md border border-white/10 px-3 py-4 sm:px-5 sm:py-6 shadow-xl min-w-16 sm:min-w-20"
-          >
-            <motion.span
-              key={u.value}
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="text-3xl sm:text-4xl font-semibold text-white tabular-nums"
-            >
-              {String(u.value).padStart(2, '0')}
-            </motion.span>
-            <span className="text-[10px] sm:text-xs uppercase tracking-widest text-rose-200/70">
-              {u.label}
-            </span>
-          </motion.div>
-        ))}
-      </div>
-
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1, duration: 0.6 }}
-        className="relative z-10 mt-10 text-rose-100/60 text-xs tracking-widest uppercase"
-      >
-        Còn một chút nữa thôi...
-      </motion.p>
-
-      <div className="relative z-10 mt-6 flex justify-center gap-3 text-2xl">
-        {['💕', '💖', '💗'].map((s, i) => (
+        <motion.div
+          className="relative my-7"
+          animate={{ y: [0, -6, 0] }}
+          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          <div className="absolute -inset-3 rounded-[2.5rem] bg-linear-to-br from-rose-300 via-fuchsia-300 to-amber-200 opacity-70 blur-md" />
+          <div className="relative h-72 w-56 overflow-hidden rounded-[2rem] border-4 border-white bg-white shadow-2xl sm:h-80 sm:w-64">
+            <img
+              src={GALLERY_IMAGE}
+              alt="Kỷ niệm của hai chúng mình"
+              className="h-full w-full object-cover"
+            />
+          </div>
           <motion.span
-            key={s}
-            animate={{ y: [0, -10, 0] }}
-            transition={{ duration: 1.8, repeat: Infinity, delay: i * 0.25, ease: 'easeInOut' }}
+            className="absolute -bottom-4 -right-5 text-5xl drop-shadow-md"
+            animate={{ scale: [1, 1.16, 1] }}
+            transition={{ duration: 1.6, repeat: Infinity }}
+            aria-hidden="true"
           >
-            {s}
+            💗
           </motion.span>
-        ))}
-      </div>
-    </motion.div>
+        </motion.div>
+
+        <p className="mb-4 font-script text-3xl text-fuchsia-800">Chúng mình đã yêu nhau được</p>
+
+        <div className="grid w-full grid-cols-4 gap-2 sm:gap-3">
+          {units.map((unit, index) => (
+            <motion.div
+              key={unit.label}
+              className="flex min-w-0 flex-col items-center rounded-2xl border border-white/80 bg-white/55 px-1 py-3 shadow-lg backdrop-blur-md sm:py-4"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.45 + index * 0.08 }}
+            >
+              <motion.span
+                key={unit.value}
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-2xl font-bold tabular-nums text-fuchsia-900 sm:text-3xl"
+              >
+                {String(unit.value).padStart(2, '0')}
+              </motion.span>
+              <span className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-rose-500 sm:text-xs">
+                {unit.label}
+              </span>
+            </motion.div>
+          ))}
+        </div>
+
+        <p className="mt-5 text-sm font-medium tracking-wider text-fuchsia-800/70">
+          Kể từ ngày 18 / 04 / 2026
+        </p>
+      </motion.section>
+    </motion.main>
   );
 }
