@@ -30,6 +30,11 @@ const BURST_RAYS = Array.from({ length: 12 }, (_, i) => i * 30);
 // lại con hamster để thử vận may lần nữa.
 const GATE_WINDOW_SECONDS = 25;
 
+const SECRET_HINT_PASSWORD = "021095";
+const SECRET_HINT_MAX_ATTEMPTS = 3;
+const SECRET_HINT_BLOCK_MS = 5 * 60 * 1000;
+const SECRET_HINT_STORAGE_KEY = "gift-screen-secret-hint-lock";
+
 // Con hamster mang chức năng "cổng thần bí" — cứ mỗi 20 giây sẽ đổi sang icon
 // tiếp theo trong danh sách này (hết vòng thì quay lại từ đầu), để người
 // chơi không thể học thuộc icon mà đoán trước.
@@ -756,6 +761,64 @@ export default function GiftScreen({ onQuestComplete, onSkipToStaircase }) {
   const [opened, setOpened] = useState(true);
   const [gifError, setGifError] = useState(false);
   const [modal, setModal] = useState(null); // { type: loại modal đang mở, ... }
+  const [secretPassword, setSecretPassword] = useState("");
+  const [secretError, setSecretError] = useState("");
+  const [secretAccess, setSecretAccess] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(SECRET_HINT_STORAGE_KEY));
+      return {
+        attempts: Number(saved?.attempts) || 0,
+        blockedUntil: Number(saved?.blockedUntil) || 0,
+      };
+    } catch {
+      return { attempts: 0, blockedUntil: 0 };
+    }
+  });
+  const [secretNow, setSecretNow] = useState(Date.now());
+  const secretBlocked = secretAccess.blockedUntil > secretNow;
+  const secretBlockSeconds = Math.max(0, Math.ceil((secretAccess.blockedUntil - secretNow) / 1000));
+
+  useEffect(() => {
+    localStorage.setItem(SECRET_HINT_STORAGE_KEY, JSON.stringify(secretAccess));
+  }, [secretAccess]);
+
+  useEffect(() => {
+    if (!secretBlocked) return;
+    const intervalId = setInterval(() => setSecretNow(Date.now()), 1000);
+    return () => clearInterval(intervalId);
+  }, [secretBlocked]);
+
+  const openSecretHint = () => {
+    setSecretNow(Date.now());
+    setSecretPassword("");
+    setSecretError("");
+    setModal({ type: "secret-hint" });
+  };
+
+  const handleSecretSubmit = (event) => {
+    event.preventDefault();
+    const now = Date.now();
+    setSecretNow(now);
+    if (secretAccess.blockedUntil > now) return;
+
+    if (secretPassword === SECRET_HINT_PASSWORD) {
+      setSecretAccess({ attempts: 0, blockedUntil: 0 });
+      setSecretPassword("");
+      setSecretError("");
+      setModal({ type: "secret-guide" });
+      return;
+    }
+
+    const attempts = secretAccess.attempts + 1;
+    setSecretPassword("");
+    if (attempts >= SECRET_HINT_MAX_ATTEMPTS) {
+      setSecretAccess({ attempts: 0, blockedUntil: now + SECRET_HINT_BLOCK_MS });
+      setSecretError("Bạn đã nhập sai 3 lần. Cánh cửa tạm khóa trong 5 phút.");
+    } else {
+      setSecretAccess({ attempts, blockedUntil: 0 });
+      setSecretError(`Mật khẩu chưa đúng. Bạn còn ${SECRET_HINT_MAX_ATTEMPTS - attempts} lần thử.`);
+    }
+  };
   const [audioError, setAudioError] = useState(false);
   const [imageError, setImageError] = useState(false);
   const [funGifError, setFunGifError] = useState(false);
@@ -774,7 +837,7 @@ export default function GiftScreen({ onQuestComplete, onSkipToStaircase }) {
   // hiện số, chỉ hiện câu đố (đáp án cố định).
   const [flowerValue, setFlowerValue] = useState(null);
   const [heartValue, setHeartValue] = useState(null);
-  // icon ☁️ log mảnh ghép KHÔNG hiện mặc định — chỉ loé ra 5s sau khi bấm
+  // icon ☁️ log mảnh ghép KHÔNG hiện mặc định — chỉ loé ra 10s sau khi bấm
   // trúng kết quả "Trí não tuổi già" của quả bom 💣 (xem BOMB_OUTCOMES)
   const [cloudVisible, setCloudVisible] = useState(false);
   const cloudTimeoutRef = useRef(null);
@@ -1640,11 +1703,11 @@ export default function GiftScreen({ onQuestComplete, onSkipToStaircase }) {
       setMusicPlaying(true);
     }
     // "Trí não tuổi già" — đóng dialog thì icon ☁️ mới loé ra, tự ẩn lại sau
-    // đúng 5s (bấm trúng nhiều lần liên tiếp thì tính lại 5s từ lần cuối)
+    // đúng 10s (bấm trúng nhiều lần liên tiếp thì tính lại 10s từ lần cuối)
     if (wasBombMemory) {
       setCloudVisible(true);
       clearTimeout(cloudTimeoutRef.current);
-      cloudTimeoutRef.current = setTimeout(() => setCloudVisible(false), 5000);
+      cloudTimeoutRef.current = setTimeout(() => setCloudVisible(false), 10000);
     }
     // "Nổ tung" — mất hết mảnh ghép đã tìm được, reset luôn số flower/heart vì
     // giờ không còn giữ mảnh nào để mà "biết" số nữa. Return sớm ở đây để
@@ -1687,6 +1750,18 @@ export default function GiftScreen({ onQuestComplete, onSkipToStaircase }) {
       {/* ánh sáng mờ ảo nền */}
       <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-130 h-130 rounded-full bg-rose-500/20 blur-3xl" />
       <div className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full bg-fuchsia-500/20 blur-3xl" />
+
+      <motion.button
+        type="button"
+        onClick={openSecretHint}
+        className="fixed top-3 left-3 z-[45] h-16 w-16 overflow-hidden rounded-2xl border-2 border-white/70 bg-white/90 p-1 shadow-xl shadow-fuchsia-950/30 transition hover:brightness-110 focus:outline-none focus:ring-4 focus:ring-fuchsia-300/60"
+        aria-label="Mở gợi ý bí mật"
+        title="Gợi ý bí mật"
+        whileHover={{ scale: 1.08, rotate: -3 }}
+        whileTap={{ scale: 0.94 }}
+      >
+        <img src="/giphy.gif" alt="" className="h-full w-full rounded-xl object-cover" />
+      </motion.button>
 
       {/* <FloatingHearts count={18} /> */}
 
@@ -1747,7 +1822,7 @@ export default function GiftScreen({ onQuestComplete, onSkipToStaircase }) {
             📊
           </button>
 
-          {/* icon ☁️ log mảnh ghép — KHÔNG hiện mặc định, chỉ loé ra 5s sau
+          {/* icon ☁️ log mảnh ghép — KHÔNG hiện mặc định, chỉ loé ra 10s sau
               khi bấm trúng "Trí não tuổi già" từ quả bom 💣 (xem closeModal) */}
           {cloudVisible && (
             <>
@@ -1818,7 +1893,7 @@ export default function GiftScreen({ onQuestComplete, onSkipToStaircase }) {
       <AnimatePresence>
         {gateWindowActive && (
           <motion.div
-            className="fixed top-3 left-3 z-40 flex items-center gap-2 rounded-2xl bg-linear-to-r from-fuchsia-500/90 to-rose-400/90 backdrop-blur-sm px-4 py-2 shadow-lg border border-white/50"
+            className="fixed top-20 left-3 z-40 flex items-center gap-2 rounded-2xl bg-linear-to-r from-fuchsia-500/90 to-rose-400/90 backdrop-blur-sm px-4 py-2 shadow-lg border border-white/50"
             initial={{ opacity: 0, y: -16, scale: 0.8 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -16, scale: 0.8 }}
@@ -2269,7 +2344,7 @@ export default function GiftScreen({ onQuestComplete, onSkipToStaircase }) {
             onClick={modal.type === "quest-complete" ? undefined : closeModal}
           >
             <motion.div
-              className="relative w-full max-w-sm rounded-3xl bg-linear-to-b from-white to-rose-50 p-6 text-center shadow-2xl"
+              className={`relative w-full ${modal.type === "secret-guide" ? "max-w-lg max-h-[88svh] overflow-y-auto" : "max-w-sm"} rounded-3xl bg-linear-to-b from-white to-rose-50 p-6 text-center shadow-2xl`}
               initial={{ scale: 0.8, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.8, opacity: 0, y: 20 }}
@@ -2285,6 +2360,74 @@ export default function GiftScreen({ onQuestComplete, onSkipToStaircase }) {
                 >
                   ✕
                 </button>
+              )}
+
+              {modal.type === "secret-hint" && (
+                <form onSubmit={handleSecretSubmit}>
+                  <p className="text-rose-500 text-xs tracking-[0.24em] uppercase mb-3">Mật mã gợi ý</p>
+                  <img
+                    src="/qr.jpg"
+                    alt="Mã QR dẫn tới manh mối"
+                    className="mx-auto mb-4 h-44 w-44 rounded-2xl border-4 border-white object-cover shadow-lg"
+                  />
+                  <p className="mb-4 text-sm leading-relaxed text-slate-600">
+                    Quét mã QR, tìm mật khẩu rồi nhập vào ô bên dưới để mở cuốn cẩm nang bí mật.
+                  </p>
+                  <input
+                    type="password"
+                    value={secretPassword}
+                    onChange={(event) => {
+                      setSecretPassword(event.target.value);
+                      setSecretError("");
+                    }}
+                    disabled={secretBlocked}
+                    autoFocus
+                    autoComplete="off"
+                    placeholder="Nhập mật khẩu"
+                    aria-label="Mật khẩu gợi ý"
+                    className="mb-3 w-full rounded-2xl border border-rose-200 bg-white px-4 py-3 text-center text-slate-800 outline-none transition focus:border-fuchsia-400 focus:ring-4 focus:ring-fuchsia-100 disabled:cursor-not-allowed disabled:bg-slate-100"
+                  />
+                  {(secretError || secretBlocked) && (
+                    <p className="mb-3 rounded-xl bg-rose-100 px-3 py-2 text-sm text-rose-600" role="alert">
+                      {secretBlocked
+                        ? `Cánh cửa đang khóa. Thử lại sau ${Math.floor(secretBlockSeconds / 60)}:${String(secretBlockSeconds % 60).padStart(2, "0")}.`
+                        : secretError}
+                    </p>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={secretBlocked || !secretPassword.trim()}
+                    className="w-full rounded-full bg-linear-to-r from-rose-400 to-fuchsia-500 px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Mở gợi ý
+                  </button>
+                </form>
+              )}
+
+              {modal.type === "secret-guide" && (
+                <div className="text-left">
+                  <div className="text-center">
+                    <div className="mb-2 text-5xl">🌀</div>
+                    <p className="text-rose-500 text-xs tracking-[0.24em] uppercase mb-2">Cổng thần bí</p>
+                    <h2 className="mb-5 text-2xl font-bold text-slate-800">Hai con đường để mở cổng</h2>
+                  </div>
+                  <section className="mb-4 rounded-2xl border border-fuchsia-100 bg-fuchsia-50/80 p-4">
+                    <h3 className="mb-3 font-bold text-fuchsia-700">Cách 1 · Truy tìm con hamster 🐹</h3>
+                    <ol className="space-y-3 text-sm leading-relaxed text-slate-700">
+                      <li><b>1.</b> Hamster chỉ bắt đầu xuất hiện sau <b>1 phút</b> kể từ lúc chơi.</li>
+                      <li><b>2.</b> Cứ mỗi <b>20 giây</b>, nó đổi lốt theo vòng: 🐹 → 🦝 → 🦡 → 🐿️ → 🐌. Nó trà trộn giữa các icon thường và không có dấu hiệu nhận biết.</li>
+                      <li><b>3.</b> Bấm trúng nó sẽ có <b>50% cơ hội</b> gọi ra một item cổng tạm thời. Item này dùng chung bộ icon, trôi trên màn hình và chỉ tồn tại <b>25 giây</b>. Hãy tìm và bấm đúng item đó trước khi biến mất để hoàn thành <b>🌀 1/1</b>.</li>
+                      <li><b>4.</b> Nếu không kích hoạt được, hamster sẽ biến mất <b>10 giây</b>, sau đó quay lại trong một lớp ngụy trang khác.</li>
+                    </ol>
+                  </section>
+                  <section className="rounded-2xl border border-amber-100 bg-amber-50/90 p-4">
+                    <h3 className="mb-2 font-bold text-amber-700">Cách 2 · Thử vận may với hộp quà 🎲</h3>
+                    <p className="text-sm leading-relaxed text-slate-700">
+                      Mỗi lần bấm hộp quà bí ẩn có <b>3% cơ hội</b> mở thẳng “Cổng thần bí” nếu bạn chưa tìm thấy — không cần chờ hamster và cũng bỏ qua thử thách 25 giây.
+                    </p>
+                  </section>
+                  <p className="mt-4 text-center text-xs italic text-slate-500">Quan sát thật kỹ — cánh cổng luôn ưu ái người kiên nhẫn ✨</p>
+                </div>
               )}
 
               {modal.type === "quest-complete" && (
