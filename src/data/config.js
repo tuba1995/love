@@ -55,6 +55,40 @@ export const GATE_GIF = "https://media.giphy.com/media/atLkXCLfT1dza/giphy.gif";
 export const MUSIC_TRAP_GIF =
   "https://media1.tenor.com/m/cF4XC0Afge8AAAAd/nick-wilde-zootopia-2.gif";
 
+// Ảnh GIF cánh cụt chạy, hiện thân cho nhân vật chính trong màn hành trình
+// con đường (RoadJourneyScreen/PenguinFigure) — thay cho hình vẽ SVG cũ.
+export const PENGUIN_RUN_GIF =
+  "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExNnY3c2piNjNtdHduYjhwYXFmYjdxZmc2emwxOTR6ejZmc25rbWFzbCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/ljfGd2E14Ff7uoGEZi/giphy.gif";
+
+// Ảnh GIF hiện trong màn hành trình con đường (RoadJourneyScreen) lúc cánh
+// cụt đang nạp năng lượng ở chặng 2 — đổi theo % đã nạp: dưới 50% hiện GIF
+// "đói" này, từ 50% trở lên đổi sang FEED_HIGH_GIF bên dưới.
+export const FEED_LOW_GIF =
+  "https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExMXlzeGs0bXh6enVodWxueXQzMGtxNXd1dGN0d2g5OWtveHBmdmNoYSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/TUmWjN0waMDqB5KWqu/giphy.gif";
+
+// Ảnh GIF hiện khi đã nạp từ 50% năng lượng trở lên, xem FEED_LOW_GIF ở trên.
+export const FEED_HIGH_GIF =
+  "https://media2.giphy.com/media/v1.Y2lkPTc5MGI3NjExdXlyNWN0amFtdm1yc2Rhd3R1MjlyNmEyc2g1dmwzd3h1ZzhvbGxjeiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/xvc8R0LCww4Ar4EWH9/giphy.gif";
+
+// Ảnh GIF hiện trong thẻ chúc mừng khi cánh cụt chạy về tới đích ở màn hành
+// trình con đường (RoadJourneyScreen).
+export const PENGUIN_ARRIVED_GIF =
+  "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExb2Z2eWs2MjVndGVpdzcxZHg0aWxtOG9hMnozYWQ5b2FndHB4eHR4MSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/k8HzeOhBwK2FBEZJph/giphy.gif";
+
+// Ảnh GIF thay cho icon 🏠 đánh dấu điểm xuất phát trên con đường ở
+// RoadJourneyScreen.
+export const ROAD_START_GIF =
+  "https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExbmQ5dHVsY3RkcTNkNzBzbGpsNHlmOGMwOTJtZGN4bXdoNW4zMHM1aCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/VbWMhNsm4FlVbn72Fw/giphy.gif";
+
+// Ảnh GIF thay cho icon 🎉 đánh dấu điểm đích trên con đường ở
+// RoadJourneyScreen.
+export const ROAD_FINISH_GIF = "https://media.giphy.com/media/ZZNBRy31kdbIKyit3N/giphy.gif";
+
+// Ảnh GIF thay cho icon 🍽️ đánh dấu quán ăn (điểm nạp năng lượng ở chặng 2)
+// trên con đường ở RoadJourneyScreen.
+export const ROAD_RESTAURANT_GIF =
+  "https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExZmYyajFnbDdkM2VlZWFhcXQ2NjZ5bjVncGZldjBmN2wwNXc5b2lvZCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/N0AwQeMf2FteWn9aHK/giphy.gif";
+
 // Báo qua Telegram cho BẠN khi người chơi tìm đủ 3 mảnh ghép + chìa khoá +
 // cổng thần bí trong hộp quà — kèm theo hũ heo đang bao nhiêu tiền và mấy
 // phần quà "hên xui" đã trúng mấy lần. Để trống thì app không gửi gì cả.
@@ -138,43 +172,43 @@ export const MEMORIES = [
     month: 1,
     title: "Tháng đầu tiên",
     date: "Tháng 1",
-    text: 'Ngày đầu tiên mình quen nhau, mọi thứ còn ngại ngùng nhưng đầy háo hức. Cảm ơn vì đã bấm nút "đồng ý" hôm đó.',
+    text: "Mình quen nhau qua Facebook Dating, bắt đầu bằng những lời chào và giới thiệu còn đôi chút ngại ngùng. Rồi mình chuyển sang Facebook để nhắn tin, càng trò chuyện càng nhận ra cả hai thật hợp tính, vui vẻ và đầy háo hức — có những hôm mải mê tâm sự đến tận 3 giờ sáng. Cảm ơn em vì đã nhận lời ngày hôm đó, để câu chuyện của chúng mình có một khởi đầu thật đẹp.",
     emoji: "🌱",
   },
   {
     month: 2,
-    title: "Lần đầu nắm tay",
+    title: "Những ngày đầu bên nhau",
     date: "Tháng 2",
-    text: "Bàn tay run run nhưng lại vừa khít với nhau. Từ đó mình luôn có một người để nắm tay đi qua mọi con đường.",
-    emoji: "🤝",
+    text: "Tháng thứ hai bắt đầu bằng những buổi đi chơi, những lần ngồi cà phê bên nhau và cả những tấm hình đầu tiên ghi lại câu chuyện của hai đứa. Kỳ lạ là những cuộc hẹn khi ấy dường như luôn gắn liền với những cơn mưa, nhưng có em bên cạnh thì ngày mưa nào cũng trở nên thật vui và đáng nhớ. Đây cũng là tháng em bắt đầu hành trình học nấu cơm. Cảm ơn em vì đã luôn lắng nghe, kiên nhẫn và chịu khó học nấu những bữa ăn đầy yêu thương cho anh. Anh trân trọng từng khoảnh khắc bình dị ấy, bởi chính chúng đã làm nên một tháng thật đặc biệt của chúng mình.",
+    emoji: "🌧️",
   },
   {
     month: 3,
-    title: "Chuyến đi đáng nhớ",
+    title: "Chiếc bẫy ngọt ngào",
     date: "Tháng 3",
-    text: "Chuyến đi chơi đầu tiên của hai đứa, cười muốn xỉu vì những trò lố của nhau. Kỷ niệm này chắc chẳng bao giờ quên.",
-    emoji: "🚗",
+    text: "Tháng thứ ba, hai đứa bắt đầu nấu cơm cho nhau nhiều hơn, mỗi bữa ăn đều có thêm một chút quan tâm và thật nhiều yêu thương. Anh cũng bắt đầu rủ rê em yêu tham gia “kèo tăng cân” đầy hấp dẫn. Ai ngờ em lại vô tình dính chiếc bẫy ngọt ngào ấy, đến lúc nhận ra thì đã không thể quay đầu nữa rồi. Và cuối cùng, anh là người được tận hưởng trọn vẹn phần thưởng — hihi! Nghĩ lại anh vẫn thấy vừa vui sướng, vừa hạnh phúc vì những khoảnh khắc tinh nghịch và đáng yêu của hai đứa.",
+    emoji: "🍚",
   },
   {
     month: 4,
     title: "Giận hờn rồi làm hoà",
     date: "Tháng 4",
-    text: "Lần đầu giận nhau, tưởng đâu to chuyện lắm, ai ngờ chỉ cần một câu xin lỗi và một cái ôm là hết giận ngay.",
-    emoji: "🌧️",
+    text: "Trong suốt hành trình của hai đứa, lần đầu em yêu tạo bất ngờ cho anh cũng vô tình trở thành lần đầu tiên đôi ta giận nhau. Thật ra lúc ấy anh cũng tức lắm, nhưng nghĩ đi nghĩ lại, anh hiểu rằng em làm vậy cũng chỉ vì yêu thương và quan tâm đến anh. Trộm vía em yêu không giận lâu, nên chuyện tưởng chừng to tát cuối cùng lại được hóa giải thật nhanh. Chỉ cần một lời xin lỗi chân thành, một chút thấu hiểu và một cái ôm thật chặt là hai đứa lại trở về bên nhau như chưa từng giận dỗi.",
+    emoji: "🤗",
   },
   {
     month: 5,
-    title: "Những cuộc gọi đêm khuya",
+    title: "Chuyến đi xa đầu tiên",
     date: "Tháng 5",
-    text: "Dù bận đến mấy cũng ráng gọi cho nhau mỗi tối. Chỉ cần nghe giọng nói là mọi mệt mỏi đều tan biến.",
-    emoji: "📞",
+    text: "Tháng thứ năm trôi qua thật êm đẹp và may mắn khi hai đứa chẳng có một cuộc cãi vã nào. Thay vào đó là những trải nghiệm mới mẻ bên nhau: cùng chơi game, cùng vào bếp nấu ăn và tận hưởng niềm vui từ những điều thật giản dị. Đặc biệt nhất là chuyến đi xa tít về tận quê anh. Anh biết lúc ấy em yêu cũng rén và có chút hồi hộp lắm, nhưng em vẫn can đảm đồng hành cùng anh. Cuối cùng, chuyến đi ấy lại trở thành một kỷ niệm vừa vui, vừa đáng yêu và thật khó quên của hai đứa.",
+    emoji: "🛵",
   },
   {
     month: 6,
-    title: "6 tháng bên nhau",
+    title: "Nửa năm và sinh nhật em",
     date: "Tháng 6",
-    text: "Nửa năm đã trôi qua thật nhanh. Cảm ơn vì đã luôn ở bên, cùng nắm tay đi tiếp thật nhiều chặng đường nữa nhé!",
-    emoji: "💍",
+    text: "Tháng cuối của hành trình này thật đặc biệt, bởi cột mốc nửa năm bên nhau cũng trùng với ngày sinh nhật em yêu. Đây là lần đầu tiên anh được tự tay tổ chức sinh nhật cho em — một kế hoạch anh đã âm thầm ấp ủ và chuẩn bị từ rất lâu, chỉ mong có thể mang đến cho em một ngày thật vui và đáng nhớ. Nửa năm đã trôi qua nhanh hơn anh tưởng. Cảm ơn em vì đã luôn ở bên, cùng anh sẻ chia bao niềm vui, những lần giận hờn và tất cả khoảnh khắc bình dị. Mong rằng chúng mình sẽ vẫn nắm chặt tay nhau, cùng bước tiếp qua thật nhiều chặng đường và đón thêm nhiều sinh nhật bên nhau nữa nhé!",
+    emoji: "🎂",
   },
 ];
 

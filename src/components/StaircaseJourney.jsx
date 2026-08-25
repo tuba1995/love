@@ -1,13 +1,217 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Heart, X } from 'lucide-react';
 import FloatingHearts from './FloatingHearts';
 import PersonFigure from './PersonFigure';
 import Candle from './Candle';
 import { MEMORIES, SITE } from '../data/config';
 
 const STEP_COUNT = MEMORIES.length;
+const LOVE_STARTED_AT = new Date(2026, 3, 18, 0, 0, 0).getTime();
+
+function getLoveTime() {
+  const totalSeconds = Math.floor(Math.max(0, Date.now() - LOVE_STARTED_AT) / 1000);
+  return {
+    days: Math.floor(totalSeconds / 86400),
+    hours: Math.floor((totalSeconds % 86400) / 3600),
+    minutes: Math.floor((totalSeconds % 3600) / 60),
+    seconds: totalSeconds % 60,
+  };
+}
+
+function LoveCounter() {
+  const [time, setTime] = useState(getLoveTime);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => setTime(getLoveTime()), 1000);
+    return () => window.clearInterval(intervalId);
+  }, []);
+
+  const units = [
+    ['Ngày', time.days],
+    ['Giờ', time.hours],
+    ['Phút', time.minutes],
+    ['Giây', time.seconds],
+  ];
+
+  return (
+    <div className="mt-5">
+      <p className="mb-3 text-xs font-semibold uppercase tracking-[0.28em] text-rose-500">Chúng mình đã yêu nhau được</p>
+      <div className="grid grid-cols-4 gap-2 sm:gap-3">
+        {units.map(([label, value]) => (
+          <div key={label} className="min-w-16 rounded-2xl border border-white/80 bg-white/65 px-2 py-3 shadow-md backdrop-blur-sm sm:min-w-20">
+            <span className="block text-2xl font-bold tabular-nums text-fuchsia-800 sm:text-3xl">{String(value).padStart(2, '0')}</span>
+            <span className="mt-1 block text-[10px] font-semibold uppercase tracking-wider text-rose-500">{label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CoupleAvatars() {
+  return (
+    <div className="flex items-center justify-center gap-5 sm:gap-8">
+      <motion.div className="h-28 w-28 overflow-hidden rounded-full border-4 border-white bg-rose-100 shadow-xl sm:h-32 sm:w-32" whileHover={{ scale: 1.05, rotate: -2 }}>
+        <img
+          src="/anh.jpg"
+          alt="Ảnh của anh"
+          className="h-full w-full object-cover"
+          onError={(event) => {
+            event.currentTarget.onerror = null;
+            event.currentTarget.src = '/em1.jpg';
+          }}
+        />
+      </motion.div>
+      <motion.span
+        className="relative z-10 grid h-12 w-12 shrink-0 place-items-center rounded-full border border-rose-200 bg-white/80 shadow-[0_6px_22px_rgba(244,63,94,0.28)] backdrop-blur-sm sm:h-14 sm:w-14"
+        animate={{ scale: [1, 1.12, 1] }}
+        transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+        aria-hidden="true"
+      >
+        <Heart className="h-7 w-7 fill-rose-500 text-rose-500 drop-shadow-sm sm:h-8 sm:w-8" strokeWidth={1.8} />
+      </motion.span>
+      <motion.div className="h-28 w-28 overflow-hidden rounded-full border-4 border-white bg-fuchsia-100 shadow-xl sm:h-32 sm:w-32" whileHover={{ scale: 1.05, rotate: 2 }}>
+        <img src="/em1.jpg" alt="Ảnh của em" className="h-full w-full object-cover" />
+      </motion.div>
+    </div>
+  );
+}
+
+const LETTER_TEXT = 'Cảm ơn vì đã luôn nắm tay nhau đi qua từng bậc thang kỷ niệm. Mong rằng chặng đường phía trước mình sẽ còn thật nhiều bậc thang hạnh phúc như thế này nữa nhé 💍';
+
+function LoveLetter() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [stage, setStage] = useState('opening');
+  const [typedText, setTypedText] = useState('');
+
+  useEffect(() => {
+    if (!isOpen || stage !== 'letter') {
+      setTypedText('');
+      return undefined;
+    }
+
+    let characterIndex = 0;
+    const intervalId = window.setInterval(() => {
+      characterIndex += 1;
+      setTypedText(LETTER_TEXT.slice(0, characterIndex));
+      if (characterIndex >= LETTER_TEXT.length) window.clearInterval(intervalId);
+    }, 38);
+
+    return () => window.clearInterval(intervalId);
+  }, [isOpen, stage]);
+
+  const closeLetter = () => {
+    setIsOpen(false);
+    window.setTimeout(() => setStage('opening'), 250);
+  };
+
+  const startLetter = () => {
+    setStage('opening');
+    setIsOpen(true);
+    window.setTimeout(() => setStage('letter'), 4300);
+  };
+
+  return (
+    <>
+      <motion.button
+        type="button"
+        onClick={startLetter}
+        className="envelope-v2-trigger mx-auto mt-5 block"
+        whileHover={{ scale: 1.07, y: -3 }}
+        whileTap={{ scale: 0.95 }}
+        aria-label="Mở thư tình"
+      >
+        <span className="envelope-v2-trigger__body" />
+        <span className="envelope-v2-trigger__flap" />
+        <span className="envelope-v2-trigger__crease" />
+        <span className="envelope-v2-trigger__heart"><Heart className="h-4 w-4 fill-white" /></span>
+      </motion.button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-fuchsia-950/45 px-5 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={closeLetter}
+          >
+            <motion.div
+              className="envelope-v2-dialog"
+              initial={{ opacity: 0, y: 45, scale: 0.82, rotateX: -18 }}
+              animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
+              exit={{ opacity: 0, y: 30, scale: 0.9 }}
+              transition={{ type: 'spring', stiffness: 180, damping: 18 }}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={closeLetter}
+                className="absolute right-4 top-4 z-30 rounded-full bg-white/70 p-2 text-rose-400 shadow-sm transition-colors hover:bg-white hover:text-rose-600"
+                aria-label="Đóng thư"
+              >
+                <X size={20} />
+              </button>
+
+              <AnimatePresence mode="wait">
+                {stage === 'opening' ? (
+                  <motion.div
+                    key="envelope-opening"
+                    className="envelope-v2-scene"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 1.04 }}
+                  >
+                    <span className="envelope-v2-shadow" />
+                    <span className="envelope-v2-back" />
+                    <span className="envelope-v2-letter">
+                      <span>Dear,</span>
+                      <span>Hello, em yêu!</span>
+                    </span>
+                    <span className="envelope-v2-flap" />
+                    <span className="envelope-v2-front" />
+                    <span className="envelope-v2-seal"><Heart className="h-6 w-6 fill-white" /></span>
+                  </motion.div>
+                ) : (
+                  <motion.article
+                    key="letter"
+                    className="envelope-v2-paper"
+                    initial={{ opacity: 0, y: 60, scale: 0.85, rotate: -3 }}
+                    animate={{ opacity: 1, y: 0, scale: 1, rotate: -1 }}
+                    transition={{ type: 'spring', stiffness: 150, damping: 17 }}
+                  >
+                    <span className="envelope-v2-paper__tape" />
+                    <span className="envelope-v2-paper__heart">♥</span>
+                    <p className="mb-7 font-script text-3xl text-rose-700 sm:text-4xl">Gửi em – người con gái anh thương! 💗</p>
+                    <p className="min-h-44 text-base leading-8 text-slate-700 sm:text-lg">
+                      {typedText}
+                      {typedText.length < LETTER_TEXT.length && (
+                        <motion.span className="ml-1 inline-block h-5 w-0.5 bg-rose-500 align-middle" animate={{ opacity: [1, 0, 1] }} transition={{ duration: 0.7, repeat: Infinity }} />
+                      )}
+                    </p>
+                    <p className="mt-5 text-right font-script text-2xl text-rose-700">Yêu em 💗</p>
+                  </motion.article>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
+
+function CoupleHoldingHands({ className = '', figureClassName, expression = 0 }) {
+  return (
+    <div className={`flex items-end ${className}`}>
+      <PersonFigure variant="boy" expression={expression} innerArm="right" className={`${figureClassName} -mr-5 drop-shadow-md`} />
+      <div className="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-[#f2cb9e] border border-black/10 mb-6 sm:mb-7 z-10" />
+      <PersonFigure variant="girl" expression={expression} innerArm="left" className={`${figureClassName} -ml-5 drop-shadow-md`} />
+    </div>
+  );
+}
 
 // A straight flight of steps centered on screen, each one a touch narrower
 // than the last so it reads as real stairs receding upward.
@@ -25,16 +229,6 @@ function buildSteps(count) {
       heightPct,
     };
   });
-}
-
-function CoupleHoldingHands({ className = '', figureClassName }) {
-  return (
-    <div className={`flex items-end ${className}`}>
-      <PersonFigure variant="boy" className={`${figureClassName} -mr-2 drop-shadow-md`} />
-      <div className="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-[#ffdcb8] border border-black/10 mb-6 sm:mb-7 z-10" />
-      <PersonFigure variant="girl" className={`${figureClassName} -ml-2 drop-shadow-md`} />
-    </div>
-  );
 }
 
 function finalBurst() {
@@ -58,6 +252,10 @@ export default function StaircaseJourney() {
   const isLast = step === STEP_COUNT - 1;
   const memory = MEMORIES[step];
   const stepHeightPct = 100 / STEP_COUNT;
+  // 4-stage expression, more cheerful the higher they've climbed — matches
+  // PersonFigure's BROW/mouth/eye stages (0 = focused, 3 = joyful at the top).
+  const progress = STEP_COUNT > 1 ? step / (STEP_COUNT - 1) : 1;
+  const expression = isLast ? 3 : progress < 0.34 ? 0 : progress < 0.67 ? 1 : 2;
 
   const goNext = () => {
     if (step < STEP_COUNT - 1) {
@@ -225,7 +423,7 @@ export default function StaircaseJourney() {
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.4, ease: 'easeOut' }}
                 >
-                  <CoupleHoldingHands figureClassName="w-9 h-16 sm:w-11 sm:h-20" />
+                  <CoupleHoldingHands expression={expression} figureClassName="w-14 h-24 sm:w-16 sm:h-28" />
                 </motion.div>
               </div>
             </div>
@@ -296,32 +494,31 @@ export default function StaircaseJourney() {
             className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 pb-10 text-center gap-6"
           >
             <motion.div
-              animate={{ y: [0, -10, 0] }}
-              transition={{ duration: 2.2, repeat: Infinity }}
-              className="flex items-end justify-center"
+              animate={{ y: [0, -7, 0] }}
+              transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
             >
-              <CoupleHoldingHands figureClassName="w-14 h-24 sm:w-16 sm:h-28" />
+              <CoupleAvatars />
             </motion.div>
 
             <div>
               <p className="font-script text-fuchsia-800 text-4xl sm:text-5xl mb-2 drop-shadow-sm">
                 {SITE.boyName} &amp; {SITE.girlName}
               </p>
-              <p className="text-rose-600/80 text-sm tracking-[0.2em] uppercase mb-4">
-                6 tháng bên nhau · từ {SITE.startDateLabel}
-              </p>
-              <p className="text-slate-700 max-w-md mx-auto leading-relaxed">
-                Cảm ơn vì đã luôn nắm tay nhau đi qua từng bậc thang kỷ niệm. Mong rằng chặng đường phía trước
-                mình sẽ còn thật nhiều bậc thang hạnh phúc như thế này nữa nhé 💍
-              </p>
+              <LoveCounter />
+              <LoveLetter />
             </div>
 
-            <button
+            <motion.button
+              type="button"
               onClick={restart}
-              className="mt-2 px-5 py-2 rounded-full bg-white/70 hover:bg-white text-rose-600 text-sm flex items-center gap-2 border border-white/60 shadow-sm transition-colors"
+              className="fixed left-4 top-4 z-30 grid h-11 w-11 place-items-center rounded-full border border-white/80 bg-white/70 text-rose-600 shadow-lg backdrop-blur-md transition-colors hover:bg-white sm:left-6 sm:top-6"
+              whileHover={{ scale: 1.08, x: -2 }}
+              whileTap={{ scale: 0.92 }}
+              aria-label="Xem lại hành trình"
+              title="Xem lại hành trình"
             >
-              <RotateCcw size={16} /> Xem lại hành trình
-            </button>
+              <ArrowLeft size={21} strokeWidth={2.2} />
+            </motion.button>
           </motion.div>
         )}
       </AnimatePresence>
