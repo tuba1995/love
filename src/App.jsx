@@ -1,18 +1,18 @@
-import { useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
-import RoadJourneyScreen from './components/RoadJourneyScreen';
-import GiftScreen from './components/GiftScreen';
-import LoginScreen from './components/LoginScreen';
-import StaircaseJourney from './components/StaircaseJourney';
-import ComingSoonScreen from './components/ComingSoonScreen';
-import RocketNextButton from './components/RocketNextButton';
+import { useState } from "react";
+import { AnimatePresence } from "framer-motion";
+import RoadJourneyScreen from "./components/RoadJourneyScreen";
+import GiftScreen from "./components/GiftScreen";
+import LoginScreen from "./components/LoginScreen";
+import StaircaseJourney from "./components/StaircaseJourney";
+import ComingSoonScreen from "./components/ComingSoonScreen";
+import RocketNextButton from "./components/RocketNextButton";
 
 const SCREENS = {
-  ROAD: 'road',
-  GIFT: 'gift',
-  LOGIN: 'login',
-  MAIN: 'main',
-  COMING_SOON: 'coming-soon',
+  ROAD: "road",
+  GIFT: "gift",
+  LOGIN: "login",
+  MAIN: "main",
+  COMING_SOON: "coming-soon",
 };
 
 function App() {
@@ -21,13 +21,16 @@ function App() {
   // do GiftScreen tính ra (mảnh ghép 1 + 2 + 3) và truyền lên qua
   // onQuestComplete, vì giá trị này ngẫu nhiên theo từng lượt chơi chứ
   // không cố định như SITE.password.
-  const [loginTarget, setLoginTarget] = useState('');
+  const [loginTarget, setLoginTarget] = useState("");
 
   return (
     <div className="min-h-svh w-full">
       <AnimatePresence mode="wait">
         {screen === SCREENS.ROAD && (
-          <RoadJourneyScreen key="road" onContinue={() => setScreen(SCREENS.GIFT)} />
+          <RoadJourneyScreen
+            key="road"
+            onContinue={() => setScreen(SCREENS.GIFT)}
+          />
         )}
         {screen === SCREENS.GIFT && (
           <GiftScreen
@@ -43,14 +46,14 @@ function App() {
           <LoginScreen
             key="login"
             target={loginTarget}
-            onSuccess={() => setScreen(SCREENS.COMING_SOON)}
+            onSuccess={() => setScreen(SCREENS.MAIN)}
             onLockout={() => setScreen(SCREENS.GIFT)}
           />
         )}
         {screen === SCREENS.MAIN && <StaircaseJourney key="main" />}
-        {screen === SCREENS.COMING_SOON && (
+        {/* {screen === SCREENS.COMING_SOON && (
           <ComingSoonScreen key="coming-soon" />
-        )}
+        )} */}
       </AnimatePresence>
       {screen === SCREENS.ROAD && (
         <RocketNextButton onNext={() => setScreen(SCREENS.GIFT)} />
