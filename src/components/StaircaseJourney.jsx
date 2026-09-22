@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { ArrowLeft, ChevronLeft, ChevronRight, Heart, X } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Heart, Volume2, VolumeX, X } from 'lucide-react';
 import FloatingHearts from './FloatingHearts';
 import PersonFigure from './PersonFigure';
 import Candle from './Candle';
-import { MEMORIES, SITE } from '../data/config';
+import { LETTER_SONG, MEMORIES, SITE } from '../data/config';
 
 const STEP_COUNT = MEMORIES.length;
 const LOVE_STARTED_AT = new Date(2026, 3, 18, 0, 0, 0).getTime();
@@ -55,7 +55,7 @@ function CoupleAvatars() {
     <div className="flex items-center justify-center gap-5 sm:gap-8">
       <motion.div className="h-28 w-28 overflow-hidden rounded-full border-4 border-white bg-rose-100 shadow-xl sm:h-32 sm:w-32" whileHover={{ scale: 1.05, rotate: -2 }}>
         <img
-          src="/anh.jpg"
+          src="/me.jpg"
           alt="Ảnh của anh"
           className="h-full w-full object-cover"
           onError={(event) => {
@@ -79,12 +79,68 @@ function CoupleAvatars() {
   );
 }
 
+// Gõ dần từng ký tự của đoạn kỷ niệm mỗi khi bước lên bậc thang mới — tốc độ
+// tính theo độ dài đoạn text để bậc nào cũng gõ xong trong khoảng thời gian
+// gần bằng nhau (đoạn càng dài gõ càng nhanh mỗi ký tự).
+function TypewriterText({ text, className }) {
+  const [typedText, setTypedText] = useState('');
+
+  useEffect(() => {
+    setTypedText('');
+    if (!text) return undefined;
+
+    const delayMs = Math.max(50, Math.min(90, 18000 / text.length));
+    let characterIndex = 0;
+    const intervalId = window.setInterval(() => {
+      characterIndex += 1;
+      setTypedText(text.slice(0, characterIndex));
+      if (characterIndex >= text.length) window.clearInterval(intervalId);
+    }, delayMs);
+
+    return () => window.clearInterval(intervalId);
+  }, [text]);
+
+  return (
+    <p className={className}>
+      {typedText}
+      {typedText.length < text.length && (
+        <motion.span
+          className="ml-0.5 inline-block h-3.5 w-0.5 bg-rose-500 align-middle"
+          animate={{ opacity: [1, 0, 1] }}
+          transition={{ duration: 0.7, repeat: Infinity }}
+        />
+      )}
+    </p>
+  );
+}
+
 const LETTER_TEXT = 'Cảm ơn vì đã luôn nắm tay nhau đi qua từng bậc thang kỷ niệm. Mong rằng chặng đường phía trước mình sẽ còn thật nhiều bậc thang hạnh phúc như thế này nữa nhé 💍';
+
+// gửi lệnh điều khiển cho player YouTube nhúng qua postMessage — cần
+// enablejsapi=1 trong src của iframe thì player mới lắng nghe được lệnh này
+function sendYoutubeCommand(iframe, func) {
+  iframe?.contentWindow?.postMessage(
+    JSON.stringify({ event: 'command', func, args: [] }),
+    '*',
+  );
+}
 
 function LoveLetter() {
   const [isOpen, setIsOpen] = useState(false);
   const [stage, setStage] = useState('opening');
   const [typedText, setTypedText] = useState('');
+  const letterIframeRef = useRef(null);
+  // Trình duyệt chỉ cho phép video tự phát CÓ TIẾNG ngay trong 1 khoảng
+  // ngắn sau 1 cú click thật của người dùng (nhiều khi vẫn bị chặn âm thầm
+  // dù đã bấm) — nên iframe luôn mount ở chế độ tự phát NHƯNG TẮT TIẾNG
+  // (mute=1, luôn được phép), rồi hiện 1 nút loa nhỏ để người chơi tự bấm
+  // bật tiếng — bấm nút là 1 user gesture thật nên chắc chắn không bị chặn.
+  const letterMusicPlaying = isOpen;
+  const [letterSoundOn, setLetterSoundOn] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) setLetterSoundOn(false);
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen || stage !== 'letter') {
@@ -113,8 +169,39 @@ function LoveLetter() {
     window.setTimeout(() => setStage('letter'), 4300);
   };
 
+  const toggleLetterSound = () => {
+    const nextOn = !letterSoundOn;
+    sendYoutubeCommand(letterIframeRef.current, nextOn ? 'unMute' : 'mute');
+    if (nextOn) sendYoutubeCommand(letterIframeRef.current, 'playVideo');
+    setLetterSoundOn(nextOn);
+  };
+
   return (
     <>
+      {letterMusicPlaying && (
+        <iframe
+          key="letter-music"
+          ref={letterIframeRef}
+          src={`https://www.youtube.com/embed/${LETTER_SONG.youtubeId}?autoplay=1&mute=1&enablejsapi=1&loop=1&playlist=${LETTER_SONG.youtubeId}`}
+          allow="autoplay"
+          className="fixed bottom-0 right-0 w-px h-px opacity-0 pointer-events-none"
+          title="Nhạc nền thư tình"
+        />
+      )}
+      {letterMusicPlaying && (
+        <motion.button
+          type="button"
+          onClick={toggleLetterSound}
+          className="fixed bottom-5 right-5 z-60 flex items-center gap-1.5 rounded-full border border-white/70 bg-white/90 px-3.5 py-2 text-xs font-medium text-rose-600 shadow-lg backdrop-blur-sm transition hover:bg-white"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 10 }}
+          whileTap={{ scale: 0.94 }}
+        >
+          {letterSoundOn ? <Volume2 size={16} /> : <VolumeX size={16} />}
+          {letterSoundOn ? LETTER_SONG.title : 'Bật nhạc'}
+        </motion.button>
+      )}
       <motion.button
         type="button"
         onClick={startLetter}
@@ -464,7 +551,7 @@ export default function StaircaseJourney() {
                   <div className="text-4xl mb-2">{memory.emoji}</div>
                   <p className="text-rose-600/80 text-xs tracking-widest uppercase mb-1">{memory.date}</p>
                   <h3 className="text-fuchsia-900 text-xl font-semibold mb-2">{memory.title}</h3>
-                  <p className="text-slate-700 text-sm leading-relaxed">{memory.text}</p>
+                  <TypewriterText text={memory.text} className="min-h-32 text-slate-700 text-sm leading-relaxed sm:min-h-28" />
 
                   <div className="flex items-center justify-center gap-3 mt-6">
                     <button

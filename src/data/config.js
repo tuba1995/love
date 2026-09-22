@@ -3,8 +3,8 @@
 
 export const SITE = {
   // Tên 2 người — đổi thành tên thật nhé
-  boyName: "Anh",
-  girlName: "Em",
+  boyName: "Saga",
+  girlName: "Candy",
 
   // Mật khẩu dự phòng cho màn Login — CHỈ dùng nếu vào thẳng màn Login mà
   // chưa có mật khẩu nào được tính (trường hợp gần như không xảy ra trong
@@ -29,6 +29,15 @@ export const SITE = {
 export const SONG = {
   title: "EM muốn cùng anh",
   url: "/xinh.mp4",
+};
+
+// Nhạc nền nhẹ nhàng phát khi mở thư tình ở trang cầu thang kỷ niệm
+// (LoveLetter trong StaircaseJourney.jsx) — tắt ngay khi đóng thư hoặc rời
+// trang. Lấy từ YouTube, chỉ cần đổi youtubeId thành ID video khác (phần
+// sau youtu.be/ hoặc v= trong link) nếu muốn đổi bài.
+export const LETTER_SONG = {
+  title: "Cảm ơn em đã đến bên anh",
+  youtubeId: "4CTAToAdwEA",
 };
 
 // Ảnh kỷ niệm hiện ra khi bấm icon 💕 trong hộp quà.

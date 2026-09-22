@@ -1736,7 +1736,8 @@ export default function GiftScreen({ onQuestComplete, onSkipToStaircase }) {
       transition={{ duration: 0.6 }}
     >
       {/* Nút bỏ qua toàn bộ nhiệm vụ tìm mảnh ghép + màn Login, đi thẳng
-          sang trang 3 (StaircaseJourney) — chỉ dùng để test/preview nhanh */}
+          sang trang 3 (StaircaseJourney) — chỉ dùng để test/preview nhanh,
+          tạm comment lại để ẩn khỏi bản chơi thật */}
       {/* {onSkipToStaircase && (
         <button
           type="button"
