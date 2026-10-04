@@ -128,7 +128,11 @@ export default function LoginScreen({ target, onSuccess, onLockout }) {
             transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
             className="relative w-48 h-48 rounded-full bg-gradient-to-br from-rose-300 to-pink-400 flex items-center justify-center shadow-xl"
           >
-            <span className="text-7xl">🧑‍🤝‍🧑</span>
+            <img
+              src="/111.jpg"
+              alt="Ảnh của hai đứa mình"
+              className="w-full h-full rounded-full object-cover"
+            />
             <motion.span
               animate={{ scale: [1, 1.25, 1] }}
               transition={{ duration: 1.4, repeat: Infinity }}
