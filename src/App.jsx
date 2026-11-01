@@ -56,7 +56,18 @@ function App() {
         )} */}
       </AnimatePresence>
       {screen === SCREENS.ROAD && (
-        <RocketNextButton onNext={() => setScreen(SCREENS.GIFT)} />
+        <RocketNextButton key="road-next" onNext={() => setScreen(SCREENS.GIFT)} />
+      )}
+      {screen === SCREENS.GIFT && (
+        // Bỏ qua nhiệm vụ, sang thẳng màn Login — xoá mật khẩu động (nếu có
+        // từ lượt trước) để màn Login dùng mật khẩu mặc định SITE.password
+        <RocketNextButton
+          key="gift-next"
+          onNext={() => {
+            setLoginTarget("");
+            setScreen(SCREENS.LOGIN);
+          }}
+        />
       )}
     </div>
   );

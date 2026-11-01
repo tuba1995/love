@@ -6,14 +6,13 @@ export const SITE = {
   boyName: "Saga",
   girlName: "Candy",
 
-  // Mật khẩu dự phòng cho màn Login — CHỈ dùng nếu vào thẳng màn Login mà
-  // chưa có mật khẩu nào được tính (trường hợp gần như không xảy ra trong
-  // luồng chơi bình thường). Bình thường mật khẩu 6 số của màn Login được
-  // GiftScreen tự tính = mảnh ghép 1 (đáp án câu đố ngựa) + mảnh ghép 2
-  // (flower) + mảnh ghép thần bí số 3 (heart) ở lần bấm gần nhất của người
-  // chơi, xem DATE_PIECES bên dưới và hàm handleQuestContinue trong
+  // Mật khẩu mặc định của màn Login — dùng khi bấm nút 🚀 ở màn game để
+  // sang thẳng màn Login. Riêng khi hoàn thành nhiệm vụ trong hộp quà thì
+  // mật khẩu 6 số vẫn do GiftScreen tự tính = mảnh ghép 1 (đáp án câu đố
+  // ngựa) + mảnh ghép 2 (flower) + mảnh ghép thần bí số 3 (heart) ở lần bấm
+  // gần nhất, xem DATE_PIECES bên dưới và hàm handleQuestContinue trong
   // GiftScreen.jsx.
-  password: "18042026",
+  password: "18102026",
 
   // Ngày bắt đầu yêu (hiển thị ở phần cuối)
   startDateLabel: "18 / 04 / 2026",
